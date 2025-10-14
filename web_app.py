@@ -163,8 +163,8 @@ Now format the transcript:"""
     try:
         # Use non-streaming request to avoid timeout issues
         response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=8000,
+            model="claude-sonnet-4-5-20250929",
+            max_tokens=4096,
             temperature=0.1,
             system=system_prompt,
             messages=[
@@ -292,7 +292,7 @@ def upload_file():
                 logger.info("Starting AI formatting")
                 try:
                     formatted_text = format_with_claude_inline(content)
-                    formatter_used = 'Claude 3.5 Sonnet'
+                    formatter_used = 'Claude Sonnet 4.5'
                     logger.info("AI formatting completed successfully")
                 except Exception as e:
                     logger.error(f"AI formatting failed: {str(e)}")
