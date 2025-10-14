@@ -80,7 +80,7 @@ class ClaudeFormatter:
             # Send request to Claude
             message = self.client.messages.create(
                 model=self.model,
-                max_tokens=20000,
+                max_tokens=8192,  # Maximum allowed for Claude 3.5 Sonnet
                 temperature=0.1,  # Low temperature for consistent formatting
                 system=system_prompt,
                 messages=[
