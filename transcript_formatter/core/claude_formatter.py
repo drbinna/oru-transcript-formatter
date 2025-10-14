@@ -77,8 +77,8 @@ class ClaudeFormatter:
             if progress_callback:
                 progress_callback("Sending transcript to Claude AI...")
             
-            # Send request to Claude
-            message = self.client.messages.create(
+            # Send request to Claude with streaming for long requests
+            with self.client.messages.stream(
                 model=self.model,
                 max_tokens=64000,  # Maximum allowed for Claude Sonnet 4.5
                 temperature=0.1,  # Low temperature for consistent formatting
@@ -89,13 +89,14 @@ class ClaudeFormatter:
                         "content": f"Please format this transcript:\n\n{transcript_text}"
                     }
                 ]
-            )
-            
-            if progress_callback:
-                progress_callback("Processing Claude AI response...")
-            
-            # Extract the formatted text
-            formatted_text = message.content[0].text
+            ) as stream:
+                if progress_callback:
+                    progress_callback("Processing Claude AI response...")
+                
+                # Collect the streamed response
+                formatted_text = ""
+                for text in stream.text_stream:
+                    formatted_text += text
             
             if progress_callback:
                 progress_callback("Transcript formatting completed!")
