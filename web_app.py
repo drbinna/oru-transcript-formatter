@@ -110,6 +110,17 @@ def health_check():
     """Health check endpoint."""
     return jsonify({'status': 'healthy', 'service': 'transcript-formatter'})
 
+@app.route('/debug')
+def debug_env():
+    """Debug endpoint to check environment variables."""
+    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    return jsonify({
+        'api_key_exists': bool(api_key),
+        'api_key_length': len(api_key) if api_key else 0,
+        'api_key_prefix': api_key[:10] + '...' if api_key else 'None',
+        'all_env_keys': list(os.environ.keys())
+    })
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8081))
     app.run(debug=False, host='0.0.0.0', port=port)
