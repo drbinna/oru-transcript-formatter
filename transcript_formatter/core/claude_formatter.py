@@ -80,7 +80,7 @@ class ClaudeFormatter:
             # Send request to Claude with streaming for long requests
             with self.client.messages.stream(
                 model=self.model,
-                max_tokens=4096,  # Max tokens for Claude Sonnet 4.5
+                max_tokens=8192,  # Max tokens for Claude Sonnet 4.5
                 temperature=0.1,  # Low temperature for consistent formatting
                 system=system_prompt,
                 messages=[
