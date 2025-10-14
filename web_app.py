@@ -226,12 +226,6 @@ def upload_file():
         logger.info(f"Request content type: {request.content_type}")
         logger.info(f"Files in request: {list(request.files.keys()) if request.files else 'None'}")
         
-        # Test immediate JSON response
-        if request.args.get('test') == 'json':
-            logger.info("Test JSON response requested")
-            response = jsonify({'success': True, 'test': 'Upload endpoint working'})
-            response.headers['Content-Type'] = 'application/json'
-            return response
         
         if 'file' not in request.files:
             logger.warning("No file in request")
@@ -285,57 +279,45 @@ def upload_file():
                         response.headers['Content-Type'] = 'application/json'
                         return response, 500
                 
-                # Test: Skip AI formatting and return success immediately
-                logger.info("=== SKIPPING AI FOR DEBUGGING ===")
+                # Format the transcript using AI
+                logger.info("Starting AI formatting")
+                try:
+                    formatted_text = format_with_claude_inline(content)
+                    formatter_used = 'Claude Sonnet 4.5'
+                    logger.info("AI formatting completed successfully")
+                except Exception as e:
+                    logger.error(f"AI formatting failed: {str(e)}")
+                    logger.error(f"AI formatting traceback: {traceback.format_exc()}")
+                    # Clean up uploaded file on error
+                    if upload_path and os.path.exists(upload_path):
+                        os.remove(upload_path)
+                    response = jsonify({'success': False, 'error': f'AI formatting failed: {str(e)}'})
+                    response.headers['Content-Type'] = 'application/json'
+                    return response, 500
+                
+                # Create output filename
+                base_name = Path(filename).stem
+                output_filename = f"{base_name}_formatted.docx"
+                output_path = os.path.join(OUTPUT_FOLDER, output_filename)
+                logger.info(f"Creating Word document: {output_path}")
+                
+                # Create Word document
+                title = base_name.replace('_', ' ').replace('-', ' ')
+                create_word_document(formatted_text, title, output_path)
+                
+                # Clean up uploaded file
                 if upload_path and os.path.exists(upload_path):
                     os.remove(upload_path)
                 
+                logger.info("Upload processing completed successfully")
                 response = jsonify({
                     'success': True,
-                    'message': 'File uploaded and read successfully (AI formatting disabled for debugging)',
-                    'filename': filename,
-                    'content_length': len(content),
-                    'test_mode': True
+                    'filename': output_filename,
+                    'formatter': formatter_used,
+                    'preview': formatted_text[:500] + '...' if len(formatted_text) > 500 else formatted_text
                 })
                 response.headers['Content-Type'] = 'application/json'
-                logger.info("=== RETURNING SUCCESS RESPONSE ===")
                 return response
-                
-                # ORIGINAL AI FORMATTING CODE (disabled for debugging):
-                # logger.info("Starting AI formatting")
-                # try:
-                #     formatted_text = format_with_claude_inline(content)
-                #     formatter_used = 'Claude Sonnet 4.5'
-                #     logger.info("AI formatting completed successfully")
-                # except Exception as e:
-                #     logger.error(f"AI formatting failed: {str(e)}")
-                #     logger.error(f"AI formatting traceback: {traceback.format_exc()}")
-                #     # Clean up uploaded file on error
-                #     if upload_path and os.path.exists(upload_path):
-                #         os.remove(upload_path)
-                #     return jsonify({'success': False, 'error': f'AI formatting failed: {str(e)}'}), 500
-                
-                # ORIGINAL DOCUMENT CREATION CODE (disabled for debugging):
-                # base_name = Path(filename).stem
-                # output_filename = f"{base_name}_formatted.docx"
-                # output_path = os.path.join(OUTPUT_FOLDER, output_filename)
-                # logger.info(f"Creating Word document: {output_path}")
-                # 
-                # # Create Word document
-                # title = base_name.replace('_', ' ').replace('-', ' ')
-                # create_word_document(formatted_text, title, output_path)
-                # 
-                # # Clean up uploaded file
-                # if upload_path and os.path.exists(upload_path):
-                #     os.remove(upload_path)
-                # 
-                # logger.info("Upload processing completed successfully")
-                # return jsonify({
-                #     'success': True,
-                #     'filename': output_filename,
-                #     'formatter': formatter_used,
-                #     'preview': formatted_text[:500] + '...' if len(formatted_text) > 500 else formatted_text
-                # })
                 
             except Exception as e:
                 logger.error(f"Processing error: {str(e)}")
