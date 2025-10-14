@@ -27,13 +27,14 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Request logging
+# Request logging (simplified)
 @app.before_request
 def log_request_info():
     """Log all incoming requests for debugging."""
-    logger.info(f"Request: {request.method} {request.path}")
-    logger.info(f"Headers: {dict(request.headers)}")
-    logger.info(f"Content-Type: {request.content_type}")
+    try:
+        logger.info(f"Request: {request.method} {request.path}")
+    except Exception as e:
+        logger.error(f"Error in before_request: {e}")
 
 # Global error handler to ensure JSON responses
 @app.errorhandler(Exception)
@@ -98,8 +99,6 @@ def index():
 def upload_file():
     """Handle file upload and processing."""
     try:
-        # Force JSON content type on all responses
-        from flask import make_response
         logger.info(f"Upload request received: {request.method} {request.path}")
         logger.info(f"Files in request: {list(request.files.keys())}")
         
@@ -214,27 +213,17 @@ def debug_env():
     response.headers['Content-Type'] = 'application/json'
     return response
 
-@app.route('/test', methods=['GET', 'POST'])
+@app.route('/test')
 def test_endpoint():
     """Simple test endpoint to verify JSON responses."""
-    logger.info(f"Test endpoint hit: {request.method}")
-    if request.method == 'POST':
-        logger.info("POST request to test endpoint")
-        response = jsonify({
+    try:
+        return jsonify({
             'success': True,
-            'message': 'POST test successful',
-            'method': request.method,
-            'path': request.path
+            'message': 'Test successful',
+            'timestamp': str(os.environ.get('REQUEST_ID', 'unknown'))
         })
-    else:
-        response = jsonify({
-            'success': True,
-            'message': 'GET test successful',
-            'method': request.method,
-            'path': request.path
-        })
-    response.headers['Content-Type'] = 'application/json'
-    return response
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8081))
