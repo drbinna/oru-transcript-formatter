@@ -15,11 +15,12 @@ from werkzeug.utils import secure_filename
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# MINIMAL VERSION - REMOVED PROBLEMATIC IMPORTS:
-# from transcript_formatter.core.claude_formatter import format_with_claude
-# from transcript_formatter.exporters.word_exporter import WordExporter
-# import anthropic
-# from dotenv import load_dotenv
+# INLINE IMPORTS - No custom modules, direct dependencies only
+import anthropic
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
@@ -83,11 +84,132 @@ def allowed_file(filename):
     """Check if file extension is allowed."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# INLINE CLAUDE FUNCTIONALITY
+def format_with_claude_inline(transcript_text):
+    """Format transcript using Claude AI - inline implementation."""
+    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    
+    if not api_key:
+        raise ValueError("Anthropic API key not found. Please set ANTHROPIC_API_KEY environment variable.")
+    
+    client = anthropic.Anthropic(api_key=api_key)
+    
+    system_prompt = """You are an expert transcript formatter. Transform this raw transcript into a polished, professional document matching broadcast-quality standards.
+
+CRITICAL OUTPUT REQUIREMENTS:
+- Output ONLY the formatted transcript content
+- NO meta-commentary or explanations
+- NO asterisks (*) - these will be converted to proper Word formatting by the export tool
+- Provide complete, publication-ready content
+
+DOCUMENT STRUCTURE:
+
+1. TITLE
+   - Extract title from context (e.g., "Living in the Last Days")
+   - Place at the very top as a header
+
+2. SPEAKER FORMATTING
+   - Bold format: **Dr. Billy Wilson:** or **Billy:** or **Male Announcer:**
+   - Consolidate fragmented dialogue from same speaker into flowing paragraphs
+   - Use **Billy (continued):** when same speaker resumes after interruption
+
+3. SCRIPTURE REFERENCES
+   - Bold ALL Bible references: **1 John 2:18**, **2 Timothy 3:1-5**, **Mark 13:13**
+   - Normalize format: "1 John chapter 2, verse 18" → **1 John 2:18**
+   - Handle ranges: "verse 1 through 5" → **1-5**
+   - Italicize the actual quoted scripture text: *"Dear children, we are living..."*
+
+4. NUMBERED TEACHING SECTIONS
+   - Identify main teaching points when speaker says: "The first is...", "The second thing...", "Two other things...", "most importantly..."
+   - Create bold numbered headers: **1. A Counterculture Mindset**, **2. Spiritual Discernment**
+   - Extract descriptive title from the content that follows
+   - Place header right before the section begins
+
+5. SPECIAL FORMATTING
+   - Italicize show names: *World Impact*
+   - Bold organizations on first mention: **ORU**, **Oral Roberts University**
+   - Bold websites: **worldimpact.tv**
+   - Italicize song titles: *"Give Me Jesus"*
+   - Italicize emphasized dialogue/quotes: *"What do you do when..."*
+
+6. SONG LYRICS
+   - Format each line separately with ♪ symbols
+   - Keep lyrics grouped together
+   - Format: ♪ lyric line here ♪
+   - Add blank line before and after song sections
+
+7. PARAGRAPH STRUCTURE
+   - Create natural 3-6 sentence paragraphs
+   - Merge fragmented sentences from same speaker
+   - Add blank line between different speakers
+   - Keep related thoughts together
+
+8. CLEANUP
+   - Fix encoding: â™ª → ♪, â€™ → ', â€œ → ", â€ → "
+   - Remove timestamps, divider lines, metadata
+   - Remove "..." at beginning/end of document
+   - Fix capitalization: "Vistula River" not "Vistula river"
+   - Remove stutters: "we know the--we need" → "we need"
+
+9. CLOSING ELEMENTS
+   - Keep announcer closing: **Announcer:** This has been...
+   - Include copyright notice if present
+   - Preserve attribution information
+
+Now format the transcript:"""
+    
+    try:
+        # Send request to Claude with streaming for long requests
+        with client.messages.stream(
+            model="claude-sonnet-4-5-20250929",
+            max_tokens=64000,
+            temperature=0.1,
+            system=system_prompt,
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Please format this transcript:\n\n{transcript_text}"
+                }
+            ]
+        ) as stream:
+            # Collect the streamed response
+            formatted_text = ""
+            for text in stream.text_stream:
+                formatted_text += text
+            
+            return formatted_text
+            
+    except Exception as e:
+        raise RuntimeError(f"Claude API error: {str(e)}")
+
 def create_word_document(formatted_text, title, output_path):
-    """MINIMAL VERSION - Create a simple text file instead of Word document."""
-    with open(output_path.replace('.docx', '.txt'), 'w', encoding='utf-8') as f:
-        f.write(f"Title: {title}\n\n")
-        f.write(formatted_text)
+    """Create a basic Word document using python-docx."""
+    try:
+        from docx import Document
+        from docx.shared import Inches
+        
+        # Create document
+        doc = Document()
+        
+        # Add title
+        title_para = doc.add_heading(title, level=1)
+        
+        # Process formatted text and add to document
+        lines = formatted_text.split('\n')
+        for line in lines:
+            if line.strip():
+                doc.add_paragraph(line)
+            else:
+                doc.add_paragraph('')  # Empty line
+        
+        # Save document
+        doc.save(output_path)
+        
+    except ImportError:
+        # Fallback to text file if python-docx not available
+        with open(output_path.replace('.docx', '.txt'), 'w', encoding='utf-8') as f:
+            f.write(f"Title: {title}\n\n")
+            f.write(formatted_text)
 
 @app.route('/')
 def index():
@@ -129,27 +251,27 @@ def upload_file():
                     content = f.read()
                 logger.info(f"File content length: {len(content)} characters")
                 
-                # MINIMAL VERSION - Simulate formatting without AI
-                logger.info("Starting mock formatting")
+                # INLINE AI FORMATTING - Full Claude functionality restored
+                logger.info("Starting AI formatting")
                 try:
-                    formatted_text = f"MOCK FORMATTED VERSION:\n\n{content}\n\n--- End of mock formatting ---"
-                    formatter_used = 'Mock Formatter (Minimal Version)'
-                    logger.info("Mock formatting completed successfully")
+                    formatted_text = format_with_claude_inline(content)
+                    formatter_used = 'Claude Sonnet 4.5 (Inline)'
+                    logger.info("AI formatting completed successfully")
                 except Exception as e:
-                    logger.error(f"Mock formatting failed: {str(e)}")
-                    logger.error(f"Mock formatting traceback: {traceback.format_exc()}")
+                    logger.error(f"AI formatting failed: {str(e)}")
+                    logger.error(f"AI formatting traceback: {traceback.format_exc()}")
                     # Clean up uploaded file on error
                     if upload_path and os.path.exists(upload_path):
                         os.remove(upload_path)
-                    return jsonify({'success': False, 'error': f'Mock formatting failed: {str(e)}'}), 500
+                    return jsonify({'success': False, 'error': f'AI formatting failed: {str(e)}'}), 500
                 
-                # Create output filename (minimal version - text file)
+                # Create output filename - back to Word documents
                 base_name = Path(filename).stem
-                output_filename = f"{base_name}_formatted.txt"
+                output_filename = f"{base_name}_formatted.docx"
                 output_path = os.path.join(OUTPUT_FOLDER, output_filename)
-                logger.info(f"Creating text document: {output_path}")
+                logger.info(f"Creating Word document: {output_path}")
                 
-                # Create text document (minimal version)
+                # Create Word document with full formatting
                 title = base_name.replace('_', ' ').replace('-', ' ')
                 create_word_document(formatted_text, title, output_path)
                 
