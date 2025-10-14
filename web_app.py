@@ -12,6 +12,10 @@ from transcript_formatter.core.claude_formatter import format_with_claude
 from transcript_formatter.exporters.word_exporter import WordExporter
 # Removed Python formatter imports - AI-only now
 import anthropic
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
