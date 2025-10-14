@@ -161,10 +161,10 @@ DOCUMENT STRUCTURE:
 Now format the transcript:"""
     
     try:
-        # Send request to Claude with streaming for long requests
-        with client.messages.stream(
-            model="claude-sonnet-4-5-20250929",
-            max_tokens=64000,
+        # Use non-streaming request to avoid timeout issues
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=8000,
             temperature=0.1,
             system=system_prompt,
             messages=[
@@ -173,13 +173,12 @@ Now format the transcript:"""
                     "content": f"Please format this transcript:\n\n{transcript_text}"
                 }
             ]
-        ) as stream:
-            # Collect the streamed response
-            formatted_text = ""
-            for text in stream.text_stream:
-                formatted_text += text
-            
-            return formatted_text
+        )
+        
+        # Get the formatted text from the response
+        formatted_text = response.content[0].text
+        
+        return formatted_text
             
     except Exception as e:
         raise RuntimeError(f"Claude API error: {str(e)}")
