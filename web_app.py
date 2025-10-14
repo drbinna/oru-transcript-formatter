@@ -31,26 +31,20 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 @app.errorhandler(Exception)
 def handle_exception(e):
     """Handle all unhandled exceptions and return JSON."""
-    logger.error(f"Unhandled exception on {request.path}: {str(e)}")
-    logger.error(f"Traceback: {traceback.format_exc()}")
-    
-    # Check if it's an API endpoint (not the main page)
-    if request.path.startswith('/upload') or request.path.startswith('/download') or request.path.startswith('/debug') or request.path.startswith('/health'):
-        return jsonify({'error': f'Server error: {str(e)}', 'traceback': traceback.format_exc()}), 500
-    # For the main page, return normal error handling
-    raise e
+    app.logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
+    return jsonify({
+        'success': False,
+        'error': str(e)
+    }), 500
 
-# Handle 500 errors specifically  
 @app.errorhandler(500)
 def handle_500_error(e):
-    """Handle 500 errors and return JSON for API endpoints."""
-    logger.error(f"500 error on {request.path}: {str(e)}")
-    
-    # Check if it's an API endpoint
-    if request.path.startswith('/upload') or request.path.startswith('/download') or request.path.startswith('/debug') or request.path.startswith('/health'):
-        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
-    # For the main page, return normal error handling
-    raise e
+    """Handle 500 errors and return JSON."""
+    app.logger.error(f"500 error: {str(e)}")
+    return jsonify({
+        'success': False,
+        'error': 'Internal server error'
+    }), 500
 
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'outputs'
@@ -83,14 +77,14 @@ def upload_file():
         
         if 'file' not in request.files:
             logger.warning("No file in request")
-            return jsonify({'error': 'No file selected'}), 400
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
         
         file = request.files['file']
         logger.info(f"File received: {file.filename}")
         
         if file.filename == '':
             logger.warning("Empty filename")
-            return jsonify({'error': 'No file selected'}), 400
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
         
         if file and allowed_file(file.filename):
             upload_path = None
@@ -119,7 +113,7 @@ def upload_file():
                     # Clean up uploaded file on error
                     if upload_path and os.path.exists(upload_path):
                         os.remove(upload_path)
-                    return jsonify({'error': f'AI formatting failed: {str(e)}'}), 500
+                    return jsonify({'success': False, 'error': f'AI formatting failed: {str(e)}'}), 500
                 
                 # Create output filename
                 base_name = Path(filename).stem
@@ -149,16 +143,16 @@ def upload_file():
                 # Clean up uploaded file on any error
                 if upload_path and os.path.exists(upload_path):
                     os.remove(upload_path)
-                return jsonify({'error': f'Processing failed: {str(e)}', 'traceback': traceback.format_exc()}), 500
+                return jsonify({'success': False, 'error': f'Processing failed: {str(e)}'}), 500
         
         logger.warning(f"Invalid file type: {file.filename}")
-        return jsonify({'error': 'Invalid file type. Please upload .txt or .docx files.'}), 400
+        return jsonify({'success': False, 'error': 'Invalid file type. Please upload .txt or .docx files.'}), 400
     
     except Exception as e:
         logger.error(f"Unhandled upload error: {str(e)}")
         logger.error(f"Unhandled upload traceback: {traceback.format_exc()}")
         # Catch all unhandled exceptions and return JSON
-        return jsonify({'error': f'Server error: {str(e)}', 'traceback': traceback.format_exc()}), 500
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/download/<filename>')
 def download_file(filename):
@@ -168,9 +162,9 @@ def download_file(filename):
         if os.path.exists(file_path):
             return send_file(file_path, as_attachment=True)
         else:
-            return jsonify({'error': 'File not found'}), 404
+            return jsonify({'success': False, 'error': 'File not found'}), 404
     except Exception as e:
-        return jsonify({'error': f'Download failed: {str(e)}'}), 500
+        return jsonify({'success': False, 'error': f'Download failed: {str(e)}'}), 500
 
 @app.route('/health')
 def health_check():
