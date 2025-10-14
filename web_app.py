@@ -9,6 +9,7 @@ import traceback
 import logging
 from pathlib import Path
 from flask import Flask, render_template, request, send_file, flash, redirect, url_for, jsonify
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 # Set up logging
@@ -23,6 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24).hex())  # Secure secret key
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -216,9 +218,17 @@ def index():
     """Main page with upload form."""
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
     """Handle file upload and processing."""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    
     try:
         logger.info("=== UPLOAD REQUEST START ===")
         logger.info(f"Request method: {request.method}")
