@@ -1,5 +1,5 @@
 """
-Flask web application for the transcript formatter.
+Flask web application for the transcript formatter - MINIMAL VERSION FOR DEBUGGING.
 Provides a modern HTML interface for uploading and formatting transcripts.
 """
 
@@ -10,18 +10,16 @@ import logging
 from pathlib import Path
 from flask import Flask, render_template, request, send_file, flash, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
-from transcript_formatter.core.claude_formatter import format_with_claude
-from transcript_formatter.exporters.word_exporter import WordExporter
-# Removed Python formatter imports - AI-only now
-import anthropic
-from dotenv import load_dotenv
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
-load_dotenv()
+# MINIMAL VERSION - REMOVED PROBLEMATIC IMPORTS:
+# from transcript_formatter.core.claude_formatter import format_with_claude
+# from transcript_formatter.exporters.word_exporter import WordExporter
+# import anthropic
+# from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
@@ -86,9 +84,10 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def create_word_document(formatted_text, title, output_path):
-    """Create a Word document from formatted text using professional WordExporter."""
-    exporter = WordExporter()
-    exporter.export(formatted_text, output_path)
+    """MINIMAL VERSION - Create a simple text file instead of Word document."""
+    with open(output_path.replace('.docx', '.txt'), 'w', encoding='utf-8') as f:
+        f.write(f"Title: {title}\n\n")
+        f.write(formatted_text)
 
 @app.route('/')
 def index():
@@ -130,27 +129,27 @@ def upload_file():
                     content = f.read()
                 logger.info(f"File content length: {len(content)} characters")
                 
-                # Format the transcript using AI
-                logger.info("Starting AI formatting")
+                # MINIMAL VERSION - Simulate formatting without AI
+                logger.info("Starting mock formatting")
                 try:
-                    formatted_text = format_with_claude(content)
-                    formatter_used = 'AI Formatter'
-                    logger.info("AI formatting completed successfully")
+                    formatted_text = f"MOCK FORMATTED VERSION:\n\n{content}\n\n--- End of mock formatting ---"
+                    formatter_used = 'Mock Formatter (Minimal Version)'
+                    logger.info("Mock formatting completed successfully")
                 except Exception as e:
-                    logger.error(f"AI formatting failed: {str(e)}")
-                    logger.error(f"AI formatting traceback: {traceback.format_exc()}")
+                    logger.error(f"Mock formatting failed: {str(e)}")
+                    logger.error(f"Mock formatting traceback: {traceback.format_exc()}")
                     # Clean up uploaded file on error
                     if upload_path and os.path.exists(upload_path):
                         os.remove(upload_path)
-                    return jsonify({'success': False, 'error': f'AI formatting failed: {str(e)}'}), 500
+                    return jsonify({'success': False, 'error': f'Mock formatting failed: {str(e)}'}), 500
                 
-                # Create output filename
+                # Create output filename (minimal version - text file)
                 base_name = Path(filename).stem
-                output_filename = f"{base_name}_formatted.docx"
+                output_filename = f"{base_name}_formatted.txt"
                 output_path = os.path.join(OUTPUT_FOLDER, output_filename)
-                logger.info(f"Creating Word document: {output_path}")
+                logger.info(f"Creating text document: {output_path}")
                 
-                # Create Word document
+                # Create text document (minimal version)
                 title = base_name.replace('_', ' ').replace('-', ' ')
                 create_word_document(formatted_text, title, output_path)
                 
@@ -202,13 +201,12 @@ def health_check():
 
 @app.route('/debug')
 def debug_env():
-    """Debug endpoint to check environment variables."""
-    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    """Minimal debug endpoint."""
     response = jsonify({
-        'api_key_exists': bool(api_key),
-        'api_key_length': len(api_key) if api_key else 0,
-        'api_key_prefix': api_key[:10] + '...' if api_key else 'None',
-        'all_env_keys': list(os.environ.keys())
+        'success': True,
+        'message': 'Debug endpoint working',
+        'version': 'minimal',
+        'env_count': len(os.environ.keys())
     })
     response.headers['Content-Type'] = 'application/json'
     return response
