@@ -47,7 +47,7 @@ class ClaudeFormatter:
         
         # Initialize Anthropic client
         self.client = Anthropic(api_key=self.api_key)
-        self.model = "claude-3-5-sonnet-20241022"  # Using Claude 3.5 Sonnet latest
+        self.model = "claude-sonnet-4-5-20250929"  # Using Claude Sonnet 4.5 - latest model
     
     def format_transcript(self, transcript_text: str, progress_callback=None) -> str:
         """
@@ -80,7 +80,7 @@ class ClaudeFormatter:
             # Send request to Claude
             message = self.client.messages.create(
                 model=self.model,
-                max_tokens=8192,  # Maximum allowed for Claude 3.5 Sonnet
+                max_tokens=64000,  # Maximum allowed for Claude Sonnet 4.5
                 temperature=0.1,  # Low temperature for consistent formatting
                 system=system_prompt,
                 messages=[
@@ -210,7 +210,7 @@ Now format the transcript:"""
         return {
             "model": self.model,
             "provider": "Anthropic",
-            "description": "Claude 3.5 Sonnet - Advanced language model for text formatting"
+            "description": "Claude Sonnet 4.5 - Latest advanced language model for text formatting"
         }
 
 
