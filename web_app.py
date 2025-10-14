@@ -21,6 +21,16 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
+# Global error handler to ensure JSON responses
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle all unhandled exceptions and return JSON."""
+    # Check if it's an API endpoint (not the main page)
+    if request.path.startswith('/upload') or request.path.startswith('/download') or request.path.startswith('/debug') or request.path.startswith('/health'):
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+    # For the main page, return normal error handling
+    raise e
+
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'outputs'
 ALLOWED_EXTENSIONS = {'txt', 'docx'}
@@ -46,56 +56,66 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Handle file upload and processing."""
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file selected'}), 400
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-    
-    if file and allowed_file(file.filename):
-        try:
-            # Save uploaded file
-            filename = secure_filename(file.filename)
-            upload_path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(upload_path)
-            
-            # Read file content
-            with open(upload_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            # Format the transcript using AI
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file selected'}), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if file and allowed_file(file.filename):
             try:
-                formatted_text = format_with_claude(content)
-                formatter_used = 'AI Formatter'
-            except (ValueError, RuntimeError, Exception) as e:
-                # Return error instead of fallback
-                return jsonify({'error': f'AI formatting failed: {str(e)}'}), 500
-            
-            # Create output filename
-            base_name = Path(filename).stem
-            output_filename = f"{base_name}_formatted.docx"
-            output_path = os.path.join(OUTPUT_FOLDER, output_filename)
-            
-            # Create Word document
-            title = base_name.replace('_', ' ').replace('-', ' ')
-            create_word_document(formatted_text, title, output_path)
-            
-            # Clean up uploaded file
-            os.remove(upload_path)
-            
-            return jsonify({
-                'success': True,
-                'filename': output_filename,
-                'formatter': formatter_used,
-                'preview': formatted_text[:500] + '...' if len(formatted_text) > 500 else formatted_text
-            })
-            
-        except Exception as e:
-            return jsonify({'error': f'Processing failed: {str(e)}'}), 500
+                # Save uploaded file
+                filename = secure_filename(file.filename)
+                upload_path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(upload_path)
+                
+                # Read file content
+                with open(upload_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Format the transcript using AI
+                try:
+                    formatted_text = format_with_claude(content)
+                    formatter_used = 'AI Formatter'
+                except (ValueError, RuntimeError, Exception) as e:
+                    # Clean up uploaded file on error
+                    if os.path.exists(upload_path):
+                        os.remove(upload_path)
+                    return jsonify({'error': f'AI formatting failed: {str(e)}'}), 500
+                
+                # Create output filename
+                base_name = Path(filename).stem
+                output_filename = f"{base_name}_formatted.docx"
+                output_path = os.path.join(OUTPUT_FOLDER, output_filename)
+                
+                # Create Word document
+                title = base_name.replace('_', ' ').replace('-', ' ')
+                create_word_document(formatted_text, title, output_path)
+                
+                # Clean up uploaded file
+                os.remove(upload_path)
+                
+                return jsonify({
+                    'success': True,
+                    'filename': output_filename,
+                    'formatter': formatter_used,
+                    'preview': formatted_text[:500] + '...' if len(formatted_text) > 500 else formatted_text
+                })
+                
+            except Exception as e:
+                # Clean up uploaded file on any error
+                if 'upload_path' in locals() and os.path.exists(upload_path):
+                    os.remove(upload_path)
+                return jsonify({'error': f'Processing failed: {str(e)}'}), 500
+        
+        return jsonify({'error': 'Invalid file type. Please upload .txt or .docx files.'}), 400
     
-    return jsonify({'error': 'Invalid file type. Please upload .txt or .docx files.'}), 400
+    except Exception as e:
+        # Catch all unhandled exceptions and return JSON
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/download/<filename>')
 def download_file(filename):

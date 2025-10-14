@@ -47,7 +47,7 @@ class ClaudeFormatter:
         
         # Initialize Anthropic client
         self.client = Anthropic(api_key=self.api_key)
-        self.model = "claude-sonnet-4-5-20250929"  # Using Claude Sonnet 4.5 - the smartest model
+        self.model = "claude-3-5-sonnet-20241022"  # Using Claude 3.5 Sonnet latest
     
     def format_transcript(self, transcript_text: str, progress_callback=None) -> str:
         """
