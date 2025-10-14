@@ -27,24 +27,50 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
+# Request logging
+@app.before_request
+def log_request_info():
+    """Log all incoming requests for debugging."""
+    logger.info(f"Request: {request.method} {request.path}")
+    logger.info(f"Headers: {dict(request.headers)}")
+    logger.info(f"Content-Type: {request.content_type}")
+
 # Global error handler to ensure JSON responses
 @app.errorhandler(Exception)
 def handle_exception(e):
     """Handle all unhandled exceptions and return JSON."""
     app.logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
-    return jsonify({
+    response = jsonify({
         'success': False,
         'error': str(e)
-    }), 500
+    })
+    response.headers['Content-Type'] = 'application/json'
+    return response, 500
 
 @app.errorhandler(500)
 def handle_500_error(e):
     """Handle 500 errors and return JSON."""
     app.logger.error(f"500 error: {str(e)}")
-    return jsonify({
+    response = jsonify({
         'success': False,
         'error': 'Internal server error'
-    }), 500
+    })
+    response.headers['Content-Type'] = 'application/json'
+    return response, 500
+
+# Add more specific error handlers
+@app.errorhandler(404)
+def handle_404_error(e):
+    """Handle 404 errors and return JSON for API endpoints."""
+    if request.path.startswith('/upload') or request.path.startswith('/download') or request.path.startswith('/debug') or request.path.startswith('/health'):
+        response = jsonify({
+            'success': False,
+            'error': 'Endpoint not found'
+        })
+        response.headers['Content-Type'] = 'application/json'
+        return response, 404
+    # For other paths, return normal 404
+    return render_template('index.html'), 404
 
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'outputs'
@@ -72,12 +98,16 @@ def index():
 def upload_file():
     """Handle file upload and processing."""
     try:
+        # Force JSON content type on all responses
+        from flask import make_response
         logger.info(f"Upload request received: {request.method} {request.path}")
         logger.info(f"Files in request: {list(request.files.keys())}")
         
         if 'file' not in request.files:
             logger.warning("No file in request")
-            return jsonify({'success': False, 'error': 'No file selected'}), 400
+            response = jsonify({'success': False, 'error': 'No file selected'})
+            response.headers['Content-Type'] = 'application/json'
+            return response, 400
         
         file = request.files['file']
         logger.info(f"File received: {file.filename}")
@@ -175,12 +205,36 @@ def health_check():
 def debug_env():
     """Debug endpoint to check environment variables."""
     api_key = os.environ.get('ANTHROPIC_API_KEY')
-    return jsonify({
+    response = jsonify({
         'api_key_exists': bool(api_key),
         'api_key_length': len(api_key) if api_key else 0,
         'api_key_prefix': api_key[:10] + '...' if api_key else 'None',
         'all_env_keys': list(os.environ.keys())
     })
+    response.headers['Content-Type'] = 'application/json'
+    return response
+
+@app.route('/test', methods=['GET', 'POST'])
+def test_endpoint():
+    """Simple test endpoint to verify JSON responses."""
+    logger.info(f"Test endpoint hit: {request.method}")
+    if request.method == 'POST':
+        logger.info("POST request to test endpoint")
+        response = jsonify({
+            'success': True,
+            'message': 'POST test successful',
+            'method': request.method,
+            'path': request.path
+        })
+    else:
+        response = jsonify({
+            'success': True,
+            'message': 'GET test successful',
+            'method': request.method,
+            'path': request.path
+        })
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8081))
