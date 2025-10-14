@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""
+Transcript Formatter CLI Entry Point
+"""
+import sys
+from transcript_formatter.cli import main
+
+if __name__ == '__main__':
+    main()
