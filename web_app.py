@@ -292,7 +292,7 @@ def upload_file():
                 logger.info("Starting AI formatting")
                 try:
                     formatted_text = format_with_claude_inline(content)
-                    formatter_used = 'Claude Sonnet 4.5'
+                    formatter_used = 'Claude 3.5 Sonnet'
                     logger.info("AI formatting completed successfully")
                 except Exception as e:
                     logger.error(f"AI formatting failed: {str(e)}")
