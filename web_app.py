@@ -1,5 +1,5 @@
 """
-Flask web application for the transcript formatter - MINIMAL VERSION FOR DEBUGGING.
+Flask web application for the transcript formatter.
 Provides a modern HTML interface for uploading and formatting transcripts.
 """
 
@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# INLINE IMPORTS - No custom modules, direct dependencies only
+# Core dependencies for AI formatting
 import anthropic
 from dotenv import load_dotenv
 
@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this'  # Change this in production
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24).hex())  # Secure secret key
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Request logging (simplified)
@@ -84,7 +84,7 @@ def allowed_file(filename):
     """Check if file extension is allowed."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# INLINE CLAUDE FUNCTIONALITY
+# Claude AI formatting functionality
 def format_with_claude_inline(transcript_text):
     """Format transcript using Claude AI - inline implementation."""
     api_key = os.environ.get('ANTHROPIC_API_KEY')
@@ -251,11 +251,11 @@ def upload_file():
                     content = f.read()
                 logger.info(f"File content length: {len(content)} characters")
                 
-                # INLINE AI FORMATTING - Full Claude functionality restored
+                # Format the transcript using AI
                 logger.info("Starting AI formatting")
                 try:
                     formatted_text = format_with_claude_inline(content)
-                    formatter_used = 'Claude Sonnet 4.5 (Inline)'
+                    formatter_used = 'Claude Sonnet 4.5'
                     logger.info("AI formatting completed successfully")
                 except Exception as e:
                     logger.error(f"AI formatting failed: {str(e)}")
@@ -265,13 +265,13 @@ def upload_file():
                         os.remove(upload_path)
                     return jsonify({'success': False, 'error': f'AI formatting failed: {str(e)}'}), 500
                 
-                # Create output filename - back to Word documents
+                # Create output filename
                 base_name = Path(filename).stem
                 output_filename = f"{base_name}_formatted.docx"
                 output_path = os.path.join(OUTPUT_FOLDER, output_filename)
                 logger.info(f"Creating Word document: {output_path}")
                 
-                # Create Word document with full formatting
+                # Create Word document
                 title = base_name.replace('_', ' ').replace('-', ' ')
                 create_word_document(formatted_text, title, output_path)
                 
