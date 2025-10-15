@@ -280,9 +280,29 @@ def create_word_document(formatted_text, title, output_path):
         # Create document
         doc = Document()
         
-        # Add title (bold and centered)
-        title_para = doc.add_heading(title, level=1)
+        # Extract title from the formatted text (first line)
+        text_lines = formatted_text.split('\n')
+        document_title = text_lines[0].strip() if text_lines else title
+        
+        # Remove title from the content (it's already the first line)
+        if text_lines and text_lines[0].strip():
+            formatted_text = '\n'.join(text_lines[1:])
+        
+        # Add title (bold, centered, underlined, Gotham/Times New Roman 20)
+        title_para = doc.add_paragraph()
         title_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        title_run = title_para.add_run(document_title)
+        title_run.bold = True
+        title_run.underline = True
+        # Try Gotham first, fallback to Times New Roman
+        try:
+            title_run.font.name = 'Gotham'
+        except:
+            title_run.font.name = 'Times New Roman'
+        title_run.font.size = Pt(20)
+        
+        # Add blank line after title
+        doc.add_paragraph()
         
         # Process formatted text line by line
         lines = formatted_text.split('\n')
