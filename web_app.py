@@ -161,10 +161,11 @@ DOCUMENT STRUCTURE:
 Now format the transcript:"""
     
     try:
-        # Use non-streaming request to avoid timeout issues
+        # Use Claude Sonnet 4.5 - the latest model
+        logger.info("Calling Claude Sonnet 4.5 API...")
         response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=8000,
+            model="claude-sonnet-4-5-20250929",
+            max_tokens=8192,
             temperature=0.1,
             system=system_prompt,
             messages=[
@@ -177,10 +178,15 @@ Now format the transcript:"""
         
         # Get the formatted text from the response
         formatted_text = response.content[0].text
+        logger.info("Claude Sonnet 4.5 API call successful")
         
         return formatted_text
             
+    except anthropic.APIError as e:
+        logger.error(f"Claude API Error: Status={e.status_code if hasattr(e, 'status_code') else 'N/A'}, Message={str(e)}")
+        raise RuntimeError(f"Claude API error: {str(e)}")
     except Exception as e:
+        logger.error(f"Unexpected error calling Claude: {type(e).__name__}: {str(e)}")
         raise RuntimeError(f"Claude API error: {str(e)}")
 
 def create_word_document(formatted_text, title, output_path):
@@ -292,7 +298,7 @@ def upload_file():
                 logger.info("Starting AI formatting")
                 try:
                     formatted_text = format_with_claude_inline(content)
-                    formatter_used = 'Claude 3.5 Sonnet'
+                    formatter_used = 'Claude Sonnet 4.5'
                     logger.info("AI formatting completed successfully")
                 except Exception as e:
                     logger.error(f"AI formatting failed: {str(e)}")
