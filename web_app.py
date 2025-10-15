@@ -96,59 +96,58 @@ def format_with_claude_inline(transcript_text):
     
     client = anthropic.Anthropic(api_key=api_key)
     
-    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready Word documents.
+    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting.
 
 <formatting_rules>
 
 ## 1. TITLE EXTRACTION AND PLACEMENT
 <title_rules>
 - Extract the main title from context or filename
-- Place at the very top of the document
-- Format as: **Title Here** (bold)
+- Place at the very top of the document on its own line
 - Add blank line after title
+- Example: Living in the Last Days
 </title_rules>
 
 ## 2. SPEAKER FORMATTING
 <speaker_rules>
-- Format all speakers as: **Speaker Name:**
-- Remove ALL timestamps: [Laura Lacy] 09:03:24 → **Laura Lacy:**
-- For continuing speakers after interruption: **Speaker Name (continued):**
-- Always bold the speaker name including the colon
+- Format all speakers as: Speaker Name: (with colon and space)
+- Remove ALL timestamps: [Laura Lacy] 09:03:24 → Laura Lacy:
+- For continuing speakers after interruption: Speaker Name (continued):
 - Add blank line between different speakers
 - Group same speaker's consecutive lines into coherent paragraphs (3-6 sentences)
+- Example: Dr. Billy Wilson: Welcome to World Impact.
 </speaker_rules>
 
 ## 3. SCRIPTURE REFERENCES
 <scripture_rules>
-- Bold all Bible references: **1 John 2:18**, **2 Timothy 3:1--5**, **Mark 13:13**
-- Format as: **Book Chapter:Verse** or **Book Chapter:Verse--Verse**
+- Format Bible references as: Book Chapter:Verse or Book Chapter:Verse--Verse
 - Recognize patterns like:
-  - "1 John chapter 2, verse 18" → **1 John 2:18**
-  - "2 Timothy 3, verse 1 through 5" → **2 Timothy 3:1--5**
-  - "Mark chapter 13, verse 13" → **Mark 13:13**
-- Italicize the actual Scripture quotes
-- Example: **Hebrews 5:14** says, *"But strong meat belongs to them..."*
+  - "1 John chapter 2, verse 18" → 1 John 2:18
+  - "2 Timothy 3, verse 1 through 5" → 2 Timothy 3:1--5
+  - "Mark chapter 13, verse 13" → Mark 13:13
+- Keep the actual Scripture quotes in quotes
+- Example: Hebrews 5:14 says, "But strong meat belongs to them..."
 </scripture_rules>
 
 ## 4. SECTION NUMBERING
 <section_rules>
 - Detect numbered sections in the content
-- Format section headers as: **1. Section Title Here**
-- Bold the entire header including number
+- Format section headers as: 1. Section Title Here
 - Recognize transitional phrases:
-  - "The first is..." → **1. [Topic]**
-  - "The second thing..." → **2. [Topic]**
-  - "And finally..." / "And most importantly..." → **5. [Topic]**
+  - "The first is..." → 1. [Topic]
+  - "The second thing..." → 2. [Topic]
+  - "And finally..." / "And most importantly..." → 5. [Topic]
 - Add blank line before and after section headers
+- Example: 1. A Counterculture Mindset
 </section_rules>
 
 ## 5. SPECIAL TEXT FORMATTING
 <special_formatting>
-- Show/Program names: Italicize → *World Impact*
-- Organizations: Bold → **ORU**, **Oral Roberts University**
-- Websites: Bold → **worldimpact.tv**
-- Song titles in quotes: Italicize → *"Give Me Jesus"*
-- Quoted speech: Italicize → *"Hey, bring that boy to me"*
+- Show/Program names: Keep in quotes: "World Impact"
+- Organizations: Keep as is: ORU, Oral Roberts University
+- Websites: Keep as is: worldimpact.tv
+- Song titles: Keep in quotes: "Give Me Jesus"
+- Quoted speech: Keep in quotes: "Hey, bring that boy to me"
 </special_formatting>
 
 ## 6. CHARACTER ENCODING FIXES
@@ -179,7 +178,7 @@ Replace broken characters:
 - Merge fragmented sentences from same speaker into flowing text
 - Keep related thoughts together
 - Add blank line between different speakers
-- Use **Speaker (continued):** when same speaker resumes after interruption
+- Use Speaker (continued): when same speaker resumes after interruption
 - Preserve paragraph breaks for topic changes
 </paragraph_rules>
 
@@ -203,19 +202,6 @@ Replace broken characters:
 
 </formatting_rules>
 
-<output_structure>
-Your output should follow this structure:
-
-1. **Document Title** (extracted from context)
-2. Blank line
-3. Content with properly formatted speakers
-4. Section headers (numbered and bold) when present
-5. Scripture references (bold) with italicized quotes
-6. Clean paragraph breaks
-7. Closing announcer/credits section
-
-</output_structure>
-
 <example_transformation>
 INPUT:
 ```
@@ -226,29 +212,30 @@ Well, I wanna talk about five things I believe you need in your life in order to
 
 OUTPUT:
 ```
-**Living in the Last Days**
+Living in the Last Days
 
-**Dr. Billy Wilson:** Welcome to *World Impact.* I'm Billy Wilson. And today we are in Krakow, Poland...
+Dr. Billy Wilson: Welcome to "World Impact." I'm Billy Wilson. And today we are in Krakow, Poland...
 
-**Billy (continued):**
+Billy (continued):
 
-**1. A Counterculture Mindset**
+1. A Counterculture Mindset
 
 We live in a culture filled with dishonor and impurity...
 
-**1 John 2:18** says, *"Dear children, we are living in the last days..."*
+1 John 2:18 says, "Dear children, we are living in the last days..."
 ```
 </example_transformation>
 
 <critical_notes>
-- ALWAYS bold speaker names with colon: **Name:**
-- ALWAYS bold Scripture references: **Book Chapter:Verse**
-- ALWAYS italicize Scripture quotes
-- ALWAYS number sections when content indicates them
-- ALWAYS fix encoding issues
-- ALWAYS create coherent paragraphs (3-6 sentences)
-- ALWAYS add **Speaker (continued):** for interrupted dialogue
-- ALWAYS maintain professional, publication-ready formatting
+- DO NOT use asterisks, underscores, or any markdown formatting
+- Output plain clean text only
+- Format speaker names with colon: Name:
+- Format Scripture references cleanly: Book Chapter:Verse
+- Number sections when content indicates them
+- Fix all encoding issues
+- Create coherent paragraphs (3-6 sentences)
+- Add Speaker (continued): for interrupted dialogue
+- NO ASTERISKS OR MARKDOWN - plain text output only
 </critical_notes>
 
 Now format the transcript:"""
@@ -283,29 +270,80 @@ Now format the transcript:"""
         raise RuntimeError(f"Claude API error: {str(e)}")
 
 def create_word_document(formatted_text, title, output_path):
-    """Create a basic Word document using python-docx."""
+    """Create a professionally formatted Word document using python-docx."""
     try:
         from docx import Document
-        from docx.shared import Inches
+        from docx.shared import Pt, Inches
+        from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+        import re
         
         # Create document
         doc = Document()
         
-        # Add title
+        # Add title (bold and centered)
         title_para = doc.add_heading(title, level=1)
+        title_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         
-        # Process formatted text and add to document
+        # Process formatted text line by line
         lines = formatted_text.split('\n')
+        
         for line in lines:
-            if line.strip():
-                doc.add_paragraph(line)
+            line = line.strip()
+            
+            if not line:
+                # Empty line
+                doc.add_paragraph('')
+                continue
+            
+            # Create paragraph
+            p = doc.add_paragraph()
+            
+            # Check if this is a speaker name (ends with colon)
+            if re.match(r'^[A-Za-z\s\(\)]+:$', line):
+                # Speaker name - make it bold
+                run = p.add_run(line)
+                run.bold = True
+                run.font.name = 'Calibri'
+                run.font.size = Pt(11)
+                
+            # Check if this is a section header (starts with number and period)
+            elif re.match(r'^\d+\.\s+.+', line):
+                # Section header - make it bold
+                run = p.add_run(line)
+                run.bold = True
+                run.font.name = 'Calibri'
+                run.font.size = Pt(11)
+                
             else:
-                doc.add_paragraph('')  # Empty line
+                # Regular content - process for Scripture references and special formatting
+                # Split by Scripture references pattern (Book Chapter:Verse)
+                scripture_pattern = r'(\b(?:Genesis|Exodus|Leviticus|Numbers|Deuteronomy|Joshua|Judges|Ruth|1 Samuel|2 Samuel|1 Kings|2 Kings|1 Chronicles|2 Chronicles|Ezra|Nehemiah|Esther|Job|Psalm|Psalms|Proverbs|Ecclesiastes|Song of Songs|Isaiah|Jeremiah|Lamentations|Ezekiel|Daniel|Hosea|Joel|Amos|Obadiah|Jonah|Micah|Nahum|Habakkuk|Zephaniah|Haggai|Zechariah|Malachi|Matthew|Mark|Luke|John|Acts|Romans|1 Corinthians|2 Corinthians|Galatians|Ephesians|Philippians|Colossians|1 Thessalonians|2 Thessalonians|1 Timothy|2 Timothy|Titus|Philemon|Hebrews|James|1 Peter|2 Peter|1 John|2 John|3 John|Jude|Revelation)\s+\d+:\d+(?:--\d+)?)\b'
+                
+                parts = re.split(scripture_pattern, line)
+                
+                for part in parts:
+                    if not part:
+                        continue
+                    
+                    # Check if this part is a Scripture reference
+                    if re.match(scripture_pattern, part):
+                        # Scripture reference - make it bold
+                        run = p.add_run(part)
+                        run.bold = True
+                        run.font.name = 'Calibri'
+                        run.font.size = Pt(11)
+                    else:
+                        # Regular text
+                        run = p.add_run(part)
+                        run.font.name = 'Calibri'
+                        run.font.size = Pt(11)
         
         # Save document
         doc.save(output_path)
+        logger.info(f"Word document saved successfully: {output_path}")
         
     except ImportError:
+        logger.warning("python-docx not available, saving as text file")
         # Fallback to text file if python-docx not available
         with open(output_path.replace('.docx', '.txt'), 'w', encoding='utf-8') as f:
             f.write(f"Title: {title}\n\n")
