@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 CORS(app)  # Enable CORS for all routes
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24).hex())  # Secure secret key
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
