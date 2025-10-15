@@ -96,7 +96,7 @@ def format_with_claude_inline(transcript_text):
     
     client = anthropic.Anthropic(api_key=api_key)
     
-    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting.
+    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting and will use Times New Roman font, size 12.
 
 <formatting_rules>
 
@@ -303,16 +303,16 @@ def create_word_document(formatted_text, title, output_path):
                 # Speaker name - make it bold
                 run = p.add_run(line)
                 run.bold = True
-                run.font.name = 'Calibri'
-                run.font.size = Pt(11)
+                run.font.name = 'Times New Roman'
+                run.font.size = Pt(12)
                 
             # Check if this is a section header (starts with number and period)
             elif re.match(r'^\d+\.\s+.+', line):
                 # Section header - make it bold
                 run = p.add_run(line)
                 run.bold = True
-                run.font.name = 'Calibri'
-                run.font.size = Pt(11)
+                run.font.name = 'Times New Roman'
+                run.font.size = Pt(12)
                 
             else:
                 # Regular content - process for Scripture references and special formatting
@@ -330,13 +330,13 @@ def create_word_document(formatted_text, title, output_path):
                         # Scripture reference - make it bold
                         run = p.add_run(part)
                         run.bold = True
-                        run.font.name = 'Calibri'
-                        run.font.size = Pt(11)
+                        run.font.name = 'Times New Roman'
+                        run.font.size = Pt(12)
                     else:
                         # Regular text
                         run = p.add_run(part)
-                        run.font.name = 'Calibri'
-                        run.font.size = Pt(11)
+                        run.font.name = 'Times New Roman'
+                        run.font.size = Pt(12)
         
         # Save document
         doc.save(output_path)
