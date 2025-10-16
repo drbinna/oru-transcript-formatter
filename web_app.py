@@ -263,6 +263,27 @@ Replace broken characters:
 
 </formatting_rules>
 
+<footer_requirement>
+
+## MANDATORY FOOTER
+
+EVERY document MUST end with this official institutional footer:
+
+────────────────────────────────────────────────────────────────────────────────
+
+Oral Roberts University Presents: World Impact with Dr. Billy Wilson
+
+Footer Rules:
+- Place at the very END of the document (after all content)
+- Add divider line above the footer
+- Center the footer text
+- Use exact text: "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
+- Do NOT bold, italicize, or change capitalization
+- This footer is MANDATORY for all transcripts
+- Add blank line before divider
+
+</footer_requirement>
+
 <example_transformation>
 INPUT:
 ```
@@ -302,6 +323,12 @@ Male Announcer: Ever since Jesus said...
 ────────────────────────────────────────────────────────────────────────────────
 
 Billy: Today on World Impact...
+
+[... rest of transcript content ...]
+
+────────────────────────────────────────────────────────────────────────────────
+
+Oral Roberts University Presents: World Impact with Dr. Billy Wilson
 ```
 </example_transformation>
 
@@ -321,6 +348,8 @@ Billy: Today on World Impact...
 - Fix all encoding issues
 - Create coherent paragraphs (3-6 sentences)
 - Add Speaker (continued): for interrupted dialogue
+- MANDATORY: End document with official footer: "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
+- Footer MUST have divider line above it
 - NO ASTERISKS OR MARKDOWN - plain text output only
 - REMEMBER: Word exporter handles all formatting - just output clean text
 </critical_notes>
@@ -454,6 +483,26 @@ def create_word_document(formatted_text, title, output_path):
                         run = p.add_run(part)
                         run.font.name = 'Times New Roman'
                         run.font.size = Pt(12)
+        
+        # Add footer section at the end of document
+        # Add some spacing before footer
+        doc.add_paragraph()
+        doc.add_paragraph()
+        
+        # Add divider line (as a border on empty paragraph)
+        divider_para = doc.add_paragraph()
+        divider_para.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        
+        # Add footer text
+        footer_para = doc.add_paragraph()
+        footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        footer_text = "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
+        footer_run = footer_para.add_run(footer_text)
+        footer_run.font.name = 'Arial'
+        footer_run.font.size = Pt(10)
+        # Set light gray color
+        from docx.shared import RGBColor
+        footer_run.font.color.rgb = RGBColor(187, 187, 187)  # Light gray #BBBBBB
         
         # Save document
         doc.save(output_path)
