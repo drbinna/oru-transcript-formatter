@@ -394,36 +394,51 @@ def create_word_document(formatted_text, title, output_path):
             doc = Document(template_path)
             logger.info("Using required template document with pre-configured branding")
             
-            # Remove any Creative Commons text and images from the template
-            # Keep only the header image and clear everything else
+            # Thoroughly scan and remove anything between header and title area
+            # Keep only the first paragraph with the header image/branding
             paragraphs_to_remove = []
-            keep_first_image = True  # Keep the header image
+            first_paragraph_kept = False
             
-            for para in doc.paragraphs:
-                # Check if paragraph contains Creative Commons text
-                if 'Creative Commons' in para.text or 'CC BY-NC' in para.text:
-                    paragraphs_to_remove.append(para)
-                # Check if paragraph contains an image
-                elif para.runs:
+            for i, para in enumerate(doc.paragraphs):
+                # Keep the first paragraph (header)
+                if not first_paragraph_kept:
+                    first_paragraph_kept = True
+                    logger.info(f"Keeping header paragraph {i}: '{para.text[:50]}...'")
+                    continue
+                
+                # Remove everything else - log what we're removing for debugging
+                logger.info(f"Removing paragraph {i}: '{para.text[:100]}...'")
+                
+                # Check for different types of content
+                has_image = False
+                has_text = bool(para.text.strip())
+                has_runs = bool(para.runs)
+                
+                if para.runs:
                     for run in para.runs:
-                        # Check if this run contains an inline image
-                        if run._element.xpath('.//a:blip'):
-                            if keep_first_image:
-                                # This is the header image, keep it
-                                keep_first_image = False
-                            else:
-                                # This is likely the CC logo, remove it
-                                paragraphs_to_remove.append(para)
-                                break
-                # Also remove any other template body content
-                elif para.text.strip() and not para.text.strip().startswith('World Impact'):
-                    paragraphs_to_remove.append(para)
+                        # Check for images in various formats
+                        if (run._element.xpath('.//a:blip') or 
+                            run._element.xpath('.//v:imagedata') or
+                            run._element.xpath('.//w:drawing') or
+                            run._element.xpath('.//w:pict')):
+                            has_image = True
+                            logger.info(f"  - Contains image/drawing")
+                
+                if has_text:
+                    logger.info(f"  - Contains text: '{para.text}'")
+                if 'creative' in para.text.lower() or 'commons' in para.text.lower():
+                    logger.info(f"  - Contains CC text")
+                
+                paragraphs_to_remove.append(para)
             
-            # Remove identified paragraphs
+            # Remove all identified paragraphs
             for para in paragraphs_to_remove:
-                p = para._element
-                p.getparent().remove(p)
-                p._p = p._element = None
+                try:
+                    p = para._element
+                    p.getparent().remove(p)
+                    p._p = p._element = None
+                except Exception as e:
+                    logger.warning(f"Could not remove paragraph: {e}")
             
             logger.info("Cleaned template content")
         else:
