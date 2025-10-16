@@ -141,11 +141,14 @@ Use this exact divider line (80 dashes):
    - Detect: "Presented by", "This has been", "Copyright", "License"
 
 ### FORMATTING SAFEGUARDS:
-- Never place two dividers consecutively
-- Never begin document with a divider (except before title)
-- Always add ONE blank line above and below each divider
+- **NEVER place two or more consecutive dividers** - if multiple dividers would occur, keep only ONE
+- **NEVER duplicate dividers** - if a divider already exists after title, do not add another
+- Never begin or end the document with a divider (exception: divider before title is allowed)
+- Always add EXACTLY ONE blank line above and ONE blank line below each divider
 - Maintain consistent 80-dash width for all dividers
 - Do not use dividers for minor transitions within same speaker's content
+- **Consolidation rule:** If logic suggests multiple dividers in sequence, consolidate to single divider
+- **Title exception:** After the title block divider, skip the next speaker divider if they're the same person
 
 </divider_line_rules>
 
@@ -299,8 +302,11 @@ Billy: Today on World Impact...
 - DO NOT use asterisks, underscores, or any markdown formatting
 - Output plain clean text only
 - ALWAYS use 80-dash divider lines: ────────────────────────────────────────────────────────────────────────────────
-- ALWAYS place dividers: above/below title, between speakers, before sections, around songs
-- ALWAYS add blank line before and after each divider
+- ONLY ONE DIVIDER between sections - NEVER consecutive dividers
+- If two dividers would appear in sequence, use only ONE
+- Do not add divider after title if speaker immediately follows
+- ALWAYS add EXACTLY one blank line before and after each divider
+- NEVER begin or end document with a divider (except before title)
 - Format speaker names with colon: Name:
 - Format Scripture references cleanly: Book Chapter:Verse
 - Number sections when content indicates them
