@@ -390,7 +390,7 @@ def create_word_document(formatted_text, title, output_path):
         
         # Add header image at the very top of the document
         import os
-        header_image_path = os.path.join('static', 'ChatGPT Image Oct 16, 2025, 09_58_32 AM.png')
+        header_image_path = os.path.join('static', 'Picture1.png')
         if os.path.exists(header_image_path):
             try:
                 # Add header image paragraph - left aligned with padding
