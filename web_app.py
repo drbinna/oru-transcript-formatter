@@ -389,7 +389,7 @@ def create_word_document(formatted_text, title, output_path):
     """Create a professionally formatted Word document using python-docx."""
     try:
         from docx import Document
-        from docx.shared import Pt, Inches
+        from docx.shared import Pt, Inches, RGBColor
         from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
         import re
         
@@ -500,9 +500,11 @@ def create_word_document(formatted_text, title, output_path):
         footer_run = footer_para.add_run(footer_text)
         footer_run.font.name = 'Arial'
         footer_run.font.size = Pt(10)
-        # Set light gray color
-        from docx.shared import RGBColor
-        footer_run.font.color.rgb = RGBColor(187, 187, 187)  # Light gray #BBBBBB
+        # Set light gray color if possible
+        try:
+            footer_run.font.color.rgb = RGBColor(187, 187, 187)  # Light gray #BBBBBB
+        except:
+            pass  # Fall back to default color if RGBColor fails
         
         # Save document
         doc.save(output_path)
