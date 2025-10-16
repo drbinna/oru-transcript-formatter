@@ -158,10 +158,15 @@ Use this exact divider line (80 dashes):
 <title_rules>
 - Extract the main title from context or filename
 - Place at the very top of the document on its own line
-- Title formatting: CENTERED, BOLD, UNDERLINED, Gotham font size 20
+- CRITICAL: Title MUST be formatted as CENTERED, BOLD, UNDERLINED, Gotham font size 20 in final Word document
+- The title should be the first line of content (after opening divider)
 - Add blank line after title
-- Example: Living in the Last Days (will be formatted by Word exporter)
-- Note: The Word exporter will apply the formatting - output plain text only
+- Example: Living in the Last Days
+- NOTE: Output plain text - the Word document exporter will automatically apply:
+  * CENTER alignment
+  * BOLD formatting
+  * UNDERLINE formatting  
+  * Gotham font, size 20pt (Times New Roman fallback)
 </title_rules>
 
 ## 2. SPEAKER FORMATTING
@@ -303,6 +308,7 @@ Billy: Today on World Impact...
 <critical_notes>
 - DO NOT use asterisks, underscores, or any markdown formatting
 - Output plain clean text only
+- TITLE MUST be first line after opening divider - will be formatted as CENTERED, BOLD, UNDERLINED, Gotham 20pt
 - ALWAYS use 80-dash divider lines: ────────────────────────────────────────────────────────────────────────────────
 - ONLY ONE DIVIDER between sections - NEVER consecutive dividers
 - If two dividers would appear in sequence, use only ONE
@@ -316,6 +322,7 @@ Billy: Today on World Impact...
 - Create coherent paragraphs (3-6 sentences)
 - Add Speaker (continued): for interrupted dialogue
 - NO ASTERISKS OR MARKDOWN - plain text output only
+- REMEMBER: Word exporter handles all formatting - just output clean text
 </critical_notes>
 
 Now format the transcript:"""
@@ -360,13 +367,23 @@ def create_word_document(formatted_text, title, output_path):
         # Create document
         doc = Document()
         
-        # Extract title from the formatted text (first line)
+        # Extract title from the formatted text (first non-divider line)
         text_lines = formatted_text.split('\n')
-        document_title = text_lines[0].strip() if text_lines else title
+        document_title = title  # Default fallback
+        title_line_index = -1
         
-        # Remove title from the content (it's already the first line)
-        if text_lines and text_lines[0].strip():
-            formatted_text = '\n'.join(text_lines[1:])
+        # Find the first line that's not empty or a divider
+        for i, line in enumerate(text_lines):
+            line = line.strip()
+            if line and not line.startswith('─'):  # Not empty and not a divider
+                document_title = line
+                title_line_index = i
+                break
+        
+        # Remove title from the content if we found it
+        if title_line_index >= 0:
+            # Keep content after the title line
+            formatted_text = '\n'.join(text_lines[title_line_index + 1:])
         
         # Add title (bold, centered, underlined, Gotham/Times New Roman 20)
         title_para = doc.add_paragraph()
