@@ -96,7 +96,7 @@ def format_with_claude_inline(transcript_text):
     
     client = anthropic.Anthropic(api_key=api_key)
     
-    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting. Document body will use Times New Roman size 12, while the title will be centered, bold, underlined in Gotham size 20.
+    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting. Document body will use Times New Roman size 12, while the title will be centered, bold, underlined in Gotham size 20. The Word exporter automatically adds the official World Impact header image at the top of every document.
 
 <divider_line_rules>
 
@@ -387,6 +387,26 @@ def create_word_document(formatted_text, title, output_path):
         
         # Create document
         doc = Document()
+        
+        # Add header image at the very top of the document
+        import os
+        header_image_path = os.path.join('static', 'ChatGPT Image Oct 16, 2025, 09_58_32 AM.png')
+        if os.path.exists(header_image_path):
+            try:
+                # Add header image paragraph
+                header_para = doc.add_paragraph()
+                header_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                header_run = header_para.add_run()
+                header_run.add_picture(header_image_path, width=Inches(6.5))  # Full page width
+                
+                # Add spacing after header (0.5 inch)
+                header_para.paragraph_format.space_after = Pt(36)  # 0.5 inch = 36 points
+                
+                logger.info("Header image added to document")
+            except Exception as e:
+                logger.warning(f"Could not add header image: {e}")
+        else:
+            logger.info("Header image not found, continuing without it")
         
         # Extract title from the formatted text (first non-divider line)
         text_lines = formatted_text.split('\n')
