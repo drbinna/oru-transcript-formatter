@@ -487,7 +487,6 @@ def create_word_document(formatted_text, title, output_path):
                         run.font.size = Pt(12)
         
         # Add the gray footer that appears on every page
-        # (Template contains header and special end-of-document footer)
         section = doc.sections[0]
         footer = section.footer
         
@@ -509,6 +508,23 @@ def create_word_document(formatted_text, title, output_path):
             footer_run.font.color.rgb = RGBColor(187, 187, 187)  # Light gray #BBBBBB
         except:
             pass  # Fall back to default color if RGBColor fails
+        
+        # Add Creative Commons license at the very end of the document
+        doc.add_paragraph()  # Add blank line before license
+        doc.add_paragraph()  # Add another blank line
+        
+        # Add the Creative Commons license text
+        license_para = doc.add_paragraph()
+        license_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        license_text = "This content available for use under a Creative Commons Attribution-NonCommercial license."
+        license_run = license_para.add_run(license_text)
+        license_run.font.name = 'Times New Roman'
+        license_run.font.size = Pt(10)
+        license_run.font.italic = True
+        try:
+            license_run.font.color.rgb = RGBColor(128, 128, 128)  # Gray color
+        except:
+            pass
         
         # Save document
         doc.save(output_path)
