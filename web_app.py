@@ -98,6 +98,57 @@ def format_with_claude_inline(transcript_text):
     
     system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting and will use Times New Roman font, size 12.
 
+<divider_line_rules>
+
+## DIVIDER LINE IMPLEMENTATION
+
+Use this exact divider line (80 dashes):
+────────────────────────────────────────────────────────────────────────────────
+
+### DIVIDER PLACEMENT RULES:
+
+1. **Title Section**
+   - Insert divider ABOVE the title
+   - Insert divider BELOW the title
+   - Add blank line before and after each divider
+
+2. **Speaker Changes**
+   - Insert divider ABOVE each new speaker
+   - Exception: Skip if same speaker continues (use "Speaker (continued):" instead)
+   - Exception: Skip for minor interjections within same topic
+
+3. **Major Theme Shifts**
+   - Insert divider when transitioning between:
+     * Narration → Song
+     * Testimony → Sermon
+     * Prayer → Announcement
+     * Teaching → Music
+   - Detect via keywords: ♪, Song, Music, Prayer, Teaching, Scripture
+
+4. **Numbered Sections**
+   - Insert divider ABOVE numbered headings (1. Section Title)
+   - Do not add divider below the heading
+
+5. **Song/Music Sections**
+   - Insert divider ABOVE the start of lyrics
+   - Insert divider BELOW the end of lyrics when returning to prose
+
+6. **Return to Main Speaker**
+   - Insert divider when returning to main speaker after interlude
+
+7. **Closing Credits**
+   - Insert divider ABOVE credits/license/outro section
+   - Detect: "Presented by", "This has been", "Copyright", "License"
+
+### FORMATTING SAFEGUARDS:
+- Never place two dividers consecutively
+- Never begin document with a divider (except before title)
+- Always add ONE blank line above and below each divider
+- Maintain consistent 80-dash width for all dividers
+- Do not use dividers for minor transitions within same speaker's content
+
+</divider_line_rules>
+
 <formatting_rules>
 
 ## 1. TITLE EXTRACTION AND PLACEMENT
@@ -207,28 +258,49 @@ INPUT:
 ```
 ... â™ªâ™ªâ™ª Dr. Billy Wilson: Welcome to "World Impact." Today we are in Krakow, Poland...
 Well, I wanna talk about five things I believe you need in your life in order to live successfully in the last days. The first is a counterculture mindset...
-1 John chapter 2, verse 18. John says, "Dear children, we are living in the last days..."
+Male Announcer: Ever since Jesus said...
+♪ Give me Jesus ♪
+Billy: Today on World Impact...
 ```
 
 OUTPUT:
 ```
+────────────────────────────────────────────────────────────────────────────────
+
 Living in the Last Days
+
+────────────────────────────────────────────────────────────────────────────────
 
 Dr. Billy Wilson: Welcome to "World Impact." I'm Billy Wilson. And today we are in Krakow, Poland...
 
-Billy (continued):
+Billy (continued): Well, I wanna talk about five things I believe you need in your life in order to live successfully in the last days.
+
+────────────────────────────────────────────────────────────────────────────────
 
 1. A Counterculture Mindset
 
 We live in a culture filled with dishonor and impurity...
 
-1 John 2:18 says, "Dear children, we are living in the last days..."
+────────────────────────────────────────────────────────────────────────────────
+
+Male Announcer: Ever since Jesus said...
+
+────────────────────────────────────────────────────────────────────────────────
+
+♪ Give me Jesus ♪
+
+────────────────────────────────────────────────────────────────────────────────
+
+Billy: Today on World Impact...
 ```
 </example_transformation>
 
 <critical_notes>
 - DO NOT use asterisks, underscores, or any markdown formatting
 - Output plain clean text only
+- ALWAYS use 80-dash divider lines: ────────────────────────────────────────────────────────────────────────────────
+- ALWAYS place dividers: above/below title, between speakers, before sections, around songs
+- ALWAYS add blank line before and after each divider
 - Format speaker names with colon: Name:
 - Format Scripture references cleanly: Book Chapter:Verse
 - Number sections when content indicates them
