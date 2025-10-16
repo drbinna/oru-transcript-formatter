@@ -267,20 +267,17 @@ Replace broken characters:
 
 ## MANDATORY FOOTER
 
-EVERY document MUST end with this official institutional footer:
+The Word document exporter will automatically add this footer to every page:
 
-────────────────────────────────────────────────────────────────────────────────
-
-Oral Roberts University Presents: World Impact with Dr. Billy Wilson
+"Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
 
 Footer Rules:
-- Place at the very END of the document (after all content)
-- Add divider line above the footer
-- Center the footer text
-- Use exact text: "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
-- Do NOT bold, italicize, or change capitalization
-- This footer is MANDATORY for all transcripts
-- Add blank line before divider
+- The Word document exporter will automatically add this footer to EVERY PAGE
+- Do NOT include the footer text in your transcript output
+- The footer will appear at the bottom of every page in the final Word document
+- Footer text: "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
+- Footer styling: Arial 10pt, light gray, centered
+- This footer is MANDATORY for all transcripts and handled automatically
 
 </footer_requirement>
 
@@ -325,10 +322,6 @@ Male Announcer: Ever since Jesus said...
 Billy: Today on World Impact...
 
 [... rest of transcript content ...]
-
-────────────────────────────────────────────────────────────────────────────────
-
-Oral Roberts University Presents: World Impact with Dr. Billy Wilson
 ```
 </example_transformation>
 
@@ -348,8 +341,7 @@ Oral Roberts University Presents: World Impact with Dr. Billy Wilson
 - Fix all encoding issues
 - Create coherent paragraphs (3-6 sentences)
 - Add Speaker (continued): for interrupted dialogue
-- MANDATORY: End document with official footer: "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
-- Footer MUST have divider line above it
+- Do NOT include footer text in output - Word exporter adds it automatically to every page
 - NO ASTERISKS OR MARKDOWN - plain text output only
 - REMEMBER: Word exporter handles all formatting - just output clean text
 </critical_notes>
@@ -484,18 +476,13 @@ def create_word_document(formatted_text, title, output_path):
                         run.font.name = 'Times New Roman'
                         run.font.size = Pt(12)
         
-        # Add footer section at the end of document
-        # Add some spacing before footer
-        doc.add_paragraph()
-        doc.add_paragraph()
-        
-        # Add divider line (as a border on empty paragraph)
-        divider_para = doc.add_paragraph()
-        divider_para.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        # Add proper page footer (appears on every page)
+        section = doc.sections[0]
+        footer = section.footer
+        footer_para = footer.paragraphs[0]
+        footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         
         # Add footer text
-        footer_para = doc.add_paragraph()
-        footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         footer_text = "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
         footer_run = footer_para.add_run(footer_text)
         footer_run.font.name = 'Arial'
