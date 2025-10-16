@@ -27,7 +27,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-image: url('/static/images/background.jpg');
+            background-image: url('/static/ORU Press Shots 004.JPG');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -37,7 +37,7 @@
             position: relative;
         }
         
-        /* Dark overlay for better text readability */
+        /* Very light overlay for text readability without blurring the background */
         body::before {
             content: '';
             position: fixed;
@@ -45,7 +45,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(0, 51, 102, 0.8) 0%, rgba(0, 34, 68, 0.8) 100%);
+            background: rgba(0, 0, 0, 0.2);
             z-index: -1;
         }
 
