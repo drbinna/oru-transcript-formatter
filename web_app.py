@@ -393,9 +393,14 @@ def create_word_document(formatted_text, title, output_path):
         header_image_path = os.path.join('static', 'Picture1.png')
         if os.path.exists(header_image_path):
             try:
-                # Add header image paragraph - aligned to left margin
+                # Add header image paragraph - force alignment to absolute left margin
                 header_para = doc.add_paragraph()
                 header_para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+                
+                # Force paragraph to absolute left margin with zero indentation
+                header_para.paragraph_format.left_indent = Inches(0)
+                header_para.paragraph_format.first_line_indent = Inches(0)
+                header_para.paragraph_format.right_indent = Inches(0)
                 
                 header_run = header_para.add_run()
                 # 70% of page width, max 650px (approximately 6.77 inches at 96 DPI)
