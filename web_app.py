@@ -96,7 +96,7 @@ def format_with_claude_inline(transcript_text):
     
     client = anthropic.Anthropic(api_key=api_key)
     
-    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting and will use Times New Roman font, size 12.
+    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting. Document body will use Times New Roman size 12, while the title will be centered, bold, underlined in Gotham size 20.
 
 <divider_line_rules>
 
@@ -158,8 +158,10 @@ Use this exact divider line (80 dashes):
 <title_rules>
 - Extract the main title from context or filename
 - Place at the very top of the document on its own line
+- Title formatting: CENTERED, BOLD, UNDERLINED, Gotham font size 20
 - Add blank line after title
-- Example: Living in the Last Days
+- Example: Living in the Last Days (will be formatted by Word exporter)
+- Note: The Word exporter will apply the formatting - output plain text only
 </title_rules>
 
 ## 2. SPEAKER FORMATTING
