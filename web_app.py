@@ -393,16 +393,21 @@ def create_word_document(formatted_text, title, output_path):
         header_image_path = os.path.join('static', 'ChatGPT Image Oct 16, 2025, 09_58_32 AM.png')
         if os.path.exists(header_image_path):
             try:
-                # Add header image paragraph
+                # Add header image paragraph - left aligned with padding
                 header_para = doc.add_paragraph()
-                header_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                header_para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+                
+                # Add left padding (~40px visual offset)
+                header_para.paragraph_format.left_indent = Inches(0.42)  # ~40px at 96 DPI
+                
                 header_run = header_para.add_run()
-                header_run.add_picture(header_image_path, width=Inches(6.5))  # Full page width
+                # 70% of page width, max 650px (approximately 6.77 inches at 96 DPI)
+                header_run.add_picture(header_image_path, width=Inches(5.7))  # 70% of ~8.1" page width
                 
-                # Add spacing after header (0.5 inch)
-                header_para.paragraph_format.space_after = Pt(36)  # 0.5 inch = 36 points
+                # Add spacing after header (12-16px vertical space)
+                header_para.paragraph_format.space_after = Pt(14)  # ~14px vertical space
                 
-                logger.info("Header image added to document")
+                logger.info("Header image added to document (left-aligned)")
             except Exception as e:
                 logger.warning(f"Could not add header image: {e}")
         else:
