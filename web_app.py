@@ -96,7 +96,7 @@ def format_with_claude_inline(transcript_text):
     
     client = anthropic.Anthropic(api_key=api_key)
     
-    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting. Document body will use Times New Roman size 12, while the title will be centered, bold, underlined in Gotham size 20. The Word exporter automatically adds the official World Impact header image at the top of every document.
+    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting. Document body will use Times New Roman size 12, while the title will be centered, bold, underlined in Gotham size 20. A branded template with pre-configured header and footers will be used for all documents.
 
 <divider_line_rules>
 
@@ -384,36 +384,19 @@ def create_word_document(formatted_text, title, output_path):
         from docx.shared import Pt, Inches, RGBColor
         from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
         import re
-        
-        # Create document
-        doc = Document()
-        
-        # Add header image at the very top of the document
         import os
-        header_image_path = os.path.join('static', 'Picture1.png')
-        if os.path.exists(header_image_path):
-            try:
-                # Add header image paragraph - force alignment to absolute left margin
-                header_para = doc.add_paragraph()
-                header_para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
-                
-                # Force paragraph to absolute left margin with zero indentation
-                header_para.paragraph_format.left_indent = Inches(0)
-                header_para.paragraph_format.first_line_indent = Inches(0)
-                header_para.paragraph_format.right_indent = Inches(0)
-                
-                header_run = header_para.add_run()
-                # 70% of page width, max 650px (approximately 6.77 inches at 96 DPI)
-                header_run.add_picture(header_image_path, width=Inches(5.7))  # 70% of ~8.1" page width
-                
-                # Add spacing after header (12-16px vertical space)
-                header_para.paragraph_format.space_after = Pt(14)  # ~14px vertical space
-                
-                logger.info("Header image added to document (left-aligned)")
-            except Exception as e:
-                logger.warning(f"Could not add header image: {e}")
+        
+        # ALWAYS use template - it's required for all documents
+        template_path = os.path.join('static', 'template.docx')
+        
+        if os.path.exists(template_path):
+            # Use the template document with pre-configured header and footer
+            doc = Document(template_path)
+            logger.info("Using required template document with pre-configured branding")
         else:
-            logger.info("Header image not found, continuing without it")
+            # Fallback if template is missing
+            doc = Document()
+            logger.warning("TEMPLATE NOT FOUND - template.docx is required in static folder!")
         
         # Extract title from the formatted text (first non-divider line)
         text_lines = formatted_text.split('\n')
@@ -503,10 +486,17 @@ def create_word_document(formatted_text, title, output_path):
                         run.font.name = 'Times New Roman'
                         run.font.size = Pt(12)
         
-        # Add proper page footer (appears on every page)
+        # Add the gray footer that appears on every page
+        # (Template contains header and special end-of-document footer)
         section = doc.sections[0]
         footer = section.footer
-        footer_para = footer.paragraphs[0]
+        
+        # Clear any existing footer content first
+        for para in footer.paragraphs:
+            para.clear()
+        
+        # Add the standard page footer
+        footer_para = footer.add_paragraph()
         footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         
         # Add footer text
@@ -514,7 +504,7 @@ def create_word_document(formatted_text, title, output_path):
         footer_run = footer_para.add_run(footer_text)
         footer_run.font.name = 'Arial'
         footer_run.font.size = Pt(10)
-        # Set light gray color if possible
+        # Set light gray color
         try:
             footer_run.font.color.rgb = RGBColor(187, 187, 187)  # Light gray #BBBBBB
         except:
