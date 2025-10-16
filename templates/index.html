@@ -351,8 +351,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-file-alt"></i> Transcript Formatter</h1>
-            <p>AI-Powered Transcript Formatting</p>
+            <h1><i class="fas fa-file-alt"></i> Oral Roberts University's AI-Powered Transcript Formatter</h1>
+            <p>Professional transcript formatting for World Impact and university content</p>
             <div class="oru-logo">
                 <i class="fas fa-university"></i> Oral Roberts University
             </div>
@@ -373,34 +373,34 @@
             <div class="options-section">
                 <p style="font-size: 1rem; color: #666; text-align: center; padding: 20px;">
                     <i class="fas fa-robot"></i> 
-                    <strong>AI-Powered Formatting</strong><br>
-                    Intelligent formatting with speaker detection and Scripture reference highlighting.
+                    <strong>ORU's Advanced AI Technology</strong><br>
+                    Intelligent formatting with speaker detection, Scripture reference highlighting, and professional document structure.
                 </p>
             </div>
 
             <div style="text-align: center;">
                 <button class="process-btn" id="processBtn">
-                    <i class="fas fa-magic"></i> Format Transcript
+                    <i class="fas fa-magic"></i> Format with ORU AI
                 </button>
             </div>
 
             <div class="progress-section" id="progressSection">
-                <h3><i class="fas fa-cog fa-spin"></i> Processing your transcript...</h3>
+                <h3><i class="fas fa-cog fa-spin"></i> ORU AI is processing your transcript...</h3>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <p id="progressText">Preparing transcript...</p>
+                <p id="progressText">Preparing transcript with ORU technology...</p>
             </div>
 
             <div class="error-message" id="errorMessage"></div>
 
             <div class="result-section" id="resultSection">
                 <div class="result-card">
-                    <h3><i class="fas fa-check-circle"></i> Transcript Formatted Successfully!</h3>
-                    <p id="resultText">Your transcript has been processed and is ready for download.</p>
+                    <h3><i class="fas fa-check-circle"></i> ORU AI Formatting Complete!</h3>
+                    <p id="resultText">Your transcript has been professionally formatted and is ready for download.</p>
                     <div style="margin-top: 15px;">
                         <a href="#" class="download-btn" id="downloadBtn">
-                            <i class="fas fa-download"></i> Download Formatted Document
+                            <i class="fas fa-download"></i> Download Professional Document
                         </a>
                     </div>
                 </div>
@@ -420,7 +420,7 @@
                     <i class="fas fa-robot"></i>
                 </div>
                 <div class="feature-title">AI-Powered</div>
-                <div class="feature-desc">Uses advanced AI for intelligent transcript formatting and speaker detection</div>
+                <div class="feature-desc">ORU's advanced AI technology for intelligent transcript formatting and speaker detection</div>
             </div>
             
             <div class="feature-card">
@@ -449,7 +449,7 @@
         </div>
 
         <div class="footer">
-            <p>&copy; 2025 Oral Roberts University - Transcript Formatter</p>
+            <p>&copy; 2025 Oral Roberts University - AI-Powered Transcript Formatter</p>
         </div>
     </div>
 
@@ -523,7 +523,7 @@
                     <i class="fas fa-file-check"></i>
                 </div>
                 <div class="upload-text" style="color: var(--success-green);">File Selected: ${file.name}</div>
-                <div class="upload-subtext">Click "Format Transcript" to process</div>
+                <div class="upload-subtext">Click "Format with ORU AI" to process</div>
             `;
             
             processBtn.style.display = 'inline-block';
@@ -547,7 +547,7 @@
             const progressInterval = setInterval(() => {
                 progress += Math.random() * 15;
                 if (progress > 90) progress = 90;
-                updateProgress(progress, 'Processing transcript...');
+                updateProgress(progress, 'ORU AI processing transcript...');
             }, 500);
 
             fetch('/upload', {
@@ -594,7 +594,7 @@
         function showResult(data) {
             resultSection.style.display = 'block';
             downloadBtn.href = `/download/${data.filename}`;
-            resultText.textContent = `Formatted using ${data.formatter}. Your document is ready!`;
+            resultText.textContent = `Professionally formatted using ORU's ${data.formatter}. Your document is ready!`;
             previewText.textContent = data.preview;
         }
 
