@@ -393,12 +393,9 @@ def create_word_document(formatted_text, title, output_path):
         header_image_path = os.path.join('static', 'Picture1.png')
         if os.path.exists(header_image_path):
             try:
-                # Add header image paragraph - left aligned with padding
+                # Add header image paragraph - aligned to left margin
                 header_para = doc.add_paragraph()
                 header_para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
-                
-                # Add left padding (~40px visual offset)
-                header_para.paragraph_format.left_indent = Inches(0.42)  # ~40px at 96 DPI
                 
                 header_run = header_para.add_run()
                 # 70% of page width, max 650px (approximately 6.77 inches at 96 DPI)
