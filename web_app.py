@@ -393,6 +393,25 @@ def create_word_document(formatted_text, title, output_path):
             # Use the template document with pre-configured header and footer
             doc = Document(template_path)
             logger.info("Using required template document with pre-configured branding")
+            
+            # Remove any Creative Commons text from the template's first page
+            # This clears all existing paragraphs except headers
+            paragraphs_to_remove = []
+            for para in doc.paragraphs:
+                # Check if paragraph contains Creative Commons text
+                if 'Creative Commons' in para.text or 'CC BY-NC' in para.text:
+                    paragraphs_to_remove.append(para)
+                # Also remove any other template body content
+                elif para.text.strip() and not para.text.strip().startswith('World Impact'):
+                    paragraphs_to_remove.append(para)
+            
+            # Remove identified paragraphs
+            for para in paragraphs_to_remove:
+                p = para._element
+                p.getparent().remove(p)
+                p._p = p._element = None
+            
+            logger.info("Cleaned template content")
         else:
             # Fallback if template is missing
             doc = Document()
