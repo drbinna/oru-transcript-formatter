@@ -394,38 +394,8 @@ def create_word_document(formatted_text, title, output_path):
             doc = Document(template_path)
             logger.info("Using required template document with pre-configured branding")
             
-            # Remove any Creative Commons text and images from the template
-            # Keep only the header image and clear everything else
-            paragraphs_to_remove = []
-            keep_first_image = True  # Keep the header image
-            
-            for para in doc.paragraphs:
-                # Check if paragraph contains Creative Commons text
-                if 'Creative Commons' in para.text or 'CC BY-NC' in para.text:
-                    paragraphs_to_remove.append(para)
-                # Check if paragraph contains an image
-                elif para.runs:
-                    for run in para.runs:
-                        # Check if this run contains an inline image
-                        if run._element.xpath('.//a:blip'):
-                            if keep_first_image:
-                                # This is the header image, keep it
-                                keep_first_image = False
-                            else:
-                                # This is likely the CC logo, remove it
-                                paragraphs_to_remove.append(para)
-                                break
-                # Also remove any other template body content
-                elif para.text.strip() and not para.text.strip().startswith('World Impact'):
-                    paragraphs_to_remove.append(para)
-            
-            # Remove identified paragraphs
-            for para in paragraphs_to_remove:
-                p = para._element
-                p.getparent().remove(p)
-                p._p = p._element = None
-            
-            logger.info("Cleaned template content")
+            # New clean template - no cleanup needed
+            logger.info("Using clean template with proper header branding")
         else:
             # Fallback if template is missing
             doc = Document()
@@ -542,22 +512,7 @@ def create_word_document(formatted_text, title, output_path):
         except:
             pass  # Fall back to default color if RGBColor fails
         
-        # Add Creative Commons license at the very end of the document
-        doc.add_paragraph()  # Add blank line before license
-        doc.add_paragraph()  # Add another blank line
-        
-        # Add the Creative Commons license text
-        license_para = doc.add_paragraph()
-        license_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        license_text = "This content available for use under a Creative Commons Attribution-NonCommercial license."
-        license_run = license_para.add_run(license_text)
-        license_run.font.name = 'Times New Roman'
-        license_run.font.size = Pt(10)
-        license_run.font.italic = True
-        try:
-            license_run.font.color.rgb = RGBColor(128, 128, 128)  # Gray color
-        except:
-            pass
+        # No Creative Commons license - will be added later if needed
         
         # Save document
         doc.save(output_path)
