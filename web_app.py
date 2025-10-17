@@ -442,7 +442,7 @@ Now format the transcript:"""
         logger.info("Calling Claude Sonnet 4.5 API...")
         response = client.messages.create(
             model="claude-sonnet-4-5-20250929",
-            max_tokens=16384,  # Balanced limit for reliability
+            max_tokens=20480,  # Match Claude's actual output capability
             temperature=0.1,
             system=system_prompt,
             messages=[
