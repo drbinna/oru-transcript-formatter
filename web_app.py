@@ -88,7 +88,36 @@ def allowed_file(filename):
 
 def get_meeting_prompt():
     """Get the system prompt for meeting transcript formatting."""
-    return """You are a professional meeting transcript formatter. Convert raw meeting transcripts into organized, actionable documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols.
+    return """You are a professional meeting transcript formatter. Convert raw meeting transcripts into clean, readable documents while preserving ALL substantive content from every speaker. Output clean text WITHOUT any asterisks, underscores, or markdown symbols.
+
+<language_cleanup_rules>
+
+When formatting this transcript, clean up the spoken language by:
+
+REMOVE:
+- Filler words: "uh", "um", "like" (when used as filler), "you know", "I mean", "so" (at sentence starts), "right?" (when seeking agreement)
+- Verbal pauses: "hmm", "mmm", "give me one second"
+- False starts: incomplete phrases that get rephrased (e.g., "we will... we need to" → "we need to")
+- Repetitive phrases: "at least" when used multiple times unnecessarily
+- Trailing ellipses ("...") unless indicating an actual meaningful pause
+
+KEEP:
+- Technical terms and product names exactly as spoken
+- All substantive content and meaning
+- Natural conversational flow where it aids clarity
+- Important context and qualifications
+
+STYLE:
+- Convert spoken fragments into complete, clear sentences
+- Maintain the speaker's intent and meaning
+- Keep the professional but conversational tone
+- Preserve important clarifications and examples
+
+Example transformation:
+BEFORE: "Uh, so yeah, at least... we will, uh, need to make sure that, you know, we have access to..."
+AFTER: "We need to make sure we have access to..."
+
+</language_cleanup_rules>
 
 <formatting_rules>
 
@@ -102,45 +131,45 @@ Format the meeting header as:
 ## 2. EXECUTIVE SUMMARY
 Create a brief 2-3 sentence executive summary of the meeting's main purpose and outcomes.
 
-## 3. KEY DISCUSSION POINTS
-Organize main topics discussed as numbered points:
-1. Topic One
-   - Key points discussed
-   - Important details
-2. Topic Two
-   - Key points discussed
-   - Important details
-
-## 4. DECISIONS MADE
-List all decisions reached during the meeting:
-- Decision 1: [Description]
-- Decision 2: [Description]
-
-## 5. ACTION ITEMS
+## 3. ACTION ITEMS (if any were discussed)
 Format as a clear list with owners:
 - [ ] Action item description - Owner: [Name] - Due: [Date if mentioned]
 - [ ] Action item description - Owner: [Name] - Due: [Date if mentioned]
 
-## 6. PARTICIPANT CONTRIBUTIONS
-Format speakers as "Name:" followed by their key contributions
-Group related discussion points together
-Remove filler words, stammers, and redundancies
+## 4. DECISIONS MADE (if any were reached)
+List all decisions reached during the meeting:
+- Decision 1: [Description]
+- Decision 2: [Description]
 
-## 7. NEXT STEPS
-Summarize the agreed-upon next steps and follow-up meeting if scheduled
+## 5. FULL TRANSCRIPT
+**CRITICAL**: Include EVERYTHING each speaker says (after language cleanup). Format as:
 
-## 8. FORMATTING GUIDELINES
-- Use clear, professional language
-- Remove "um", "uh", "you know" and similar filler words
-- Fix grammar and incomplete sentences
-- Preserve technical terms and specific details
-- Group related discussion points together
-- Use bullet points for clarity
+Speaker Name: [Their complete statement, cleaned up according to the language rules above]
+
+Speaker Name: [Their next complete statement]
+
+Rules for the transcript section:
+- Include EVERY speaker's COMPLETE contributions
+- Apply the language cleanup rules to make it readable
+- Preserve the chronological order of the conversation
+- Group consecutive statements by the same speaker into paragraphs
+- Maintain all technical details, numbers, dates, and specific information
+- Keep ALL substantive discussion points, questions, answers, and comments
+
+## 6. NEXT STEPS (if discussed)
+Summarize any agreed-upon next steps and follow-up meetings if scheduled
+
+## IMPORTANT NOTES:
+- The FULL TRANSCRIPT section must contain ALL content from the meeting
+- Every speaker's words must be included (after cleanup)
+- Do not summarize or skip any parts of the conversation
+- Only remove the specific filler words and false starts listed above
+- Preserve the complete meaning and context of every statement
 - NO asterisks, NO underscores, NO markdown formatting
 
 </formatting_rules>
 
-Now format the meeting transcript:"""
+Now format the meeting transcript with ALL speaker content preserved:"""
 
 # Claude AI formatting functionality
 def format_with_claude_inline(transcript_text, document_type="world_impact"):
