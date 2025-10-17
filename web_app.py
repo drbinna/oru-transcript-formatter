@@ -438,13 +438,11 @@ Billy: Today on World Impact...
 Now format the transcript:"""
     
     try:
-        # Use Claude Sonnet 4.5 with streaming for longer operations
-        logger.info("Calling Claude Sonnet 4.5 API with streaming...")
-        
-        # Use streaming for operations that may take longer than 10 minutes
-        stream = client.messages.stream(
+        # Use Claude Sonnet 4.5 - optimized for Render deployment
+        logger.info("Calling Claude Sonnet 4.5 API...")
+        response = client.messages.create(
             model="claude-sonnet-4-5-20250929",
-            max_tokens=32768,
+            max_tokens=16384,  # Balanced limit for reliability
             temperature=0.1,
             system=system_prompt,
             messages=[
@@ -455,15 +453,9 @@ Now format the transcript:"""
             ]
         )
         
-        # Collect the streamed response
-        formatted_text = ""
-        logger.info("Streaming Claude response...")
-        
-        with stream as stream:
-            for text in stream.text_stream:
-                formatted_text += text
-        
-        logger.info("Claude Sonnet 4.5 streaming completed successfully")
+        # Get the formatted text from the response
+        formatted_text = response.content[0].text
+        logger.info("Claude Sonnet 4.5 API call successful")
         
         return formatted_text
             
