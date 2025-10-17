@@ -442,7 +442,7 @@ Now format the transcript:"""
         logger.info("Calling Claude Sonnet 4.5 API...")
         response = client.messages.create(
             model="claude-sonnet-4-5-20250929",
-            max_tokens=8192,
+            max_tokens=32768,
             temperature=0.1,
             system=system_prompt,
             messages=[
