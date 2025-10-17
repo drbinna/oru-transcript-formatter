@@ -371,10 +371,25 @@
             </div>
 
             <div class="options-section">
-                <p style="font-size: 1rem; color: #666; text-align: center; padding: 20px;">
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <label style="font-size: 1.1rem; color: var(--oru-blue); font-weight: 600; margin-bottom: 10px; display: block;">
+                        <i class="fas fa-file-alt"></i> Select Document Type
+                    </label>
+                    <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                        <label class="radio-option" style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: white; border: 2px solid var(--oru-blue); border-radius: 25px; cursor: pointer; transition: all 0.3s;">
+                            <input type="radio" name="documentType" value="world_impact" checked style="accent-color: var(--oru-blue);">
+                            <span style="color: var(--oru-blue); font-weight: 500;">World Impact Transcript</span>
+                        </label>
+                        <label class="radio-option" style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: white; border: 2px solid var(--oru-light-blue); border-radius: 25px; cursor: pointer; transition: all 0.3s;">
+                            <input type="radio" name="documentType" value="meeting" style="accent-color: var(--oru-light-blue);">
+                            <span style="color: var(--oru-light-blue); font-weight: 500;">Meeting Transcript</span>
+                        </label>
+                    </div>
+                </div>
+                <p style="font-size: 1rem; color: #666; text-align: center; padding: 10px;" id="formatDescription">
                     <i class="fas fa-robot"></i> 
                     <strong>ORU's Advanced AI Technology</strong><br>
-                    Intelligent formatting with speaker detection, Scripture reference highlighting, and professional document structure.
+                    <span id="descriptionText">Intelligent formatting with speaker detection, Scripture reference highlighting, and professional document structure.</span>
                 </p>
             </div>
 
@@ -465,9 +480,21 @@
         const errorMessage = document.getElementById('errorMessage');
         const previewText = document.getElementById('previewText');
         const resultText = document.getElementById('resultText');
-        // Removed Python checkbox - AI-only now
+        const descriptionText = document.getElementById('descriptionText');
 
         let selectedFile = null;
+
+        // Handle document type selection
+        const documentTypeRadios = document.querySelectorAll('input[name="documentType"]');
+        documentTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'meeting') {
+                    descriptionText.textContent = 'Optimized for meeting summaries with action items, decisions, and participant contributions.';
+                } else {
+                    descriptionText.textContent = 'Intelligent formatting with speaker detection, Scripture reference highlighting, and professional document structure.';
+                }
+            });
+        });
 
         // Upload area click handler
         uploadArea.addEventListener('click', () => {
@@ -536,6 +563,10 @@
 
             const formData = new FormData();
             formData.append('file', selectedFile);
+            
+            // Add document type to form data
+            const documentType = document.querySelector('input[name="documentType"]:checked').value;
+            formData.append('document_type', documentType);
 
             // Show progress
             showProgress();

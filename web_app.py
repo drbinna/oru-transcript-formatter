@@ -86,8 +86,64 @@ def allowed_file(filename):
     """Check if file extension is allowed."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_meeting_prompt():
+    """Get the system prompt for meeting transcript formatting."""
+    return """You are a professional meeting transcript formatter. Convert raw meeting transcripts into organized, actionable documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols.
+
+<formatting_rules>
+
+## 1. MEETING HEADER
+Format the meeting header as:
+- Meeting Title (if identifiable from content)
+- Date: [Extract if available]
+- Participants: [List all identified participants]
+- Duration: [If available]
+
+## 2. EXECUTIVE SUMMARY
+Create a brief 2-3 sentence executive summary of the meeting's main purpose and outcomes.
+
+## 3. KEY DISCUSSION POINTS
+Organize main topics discussed as numbered points:
+1. Topic One
+   - Key points discussed
+   - Important details
+2. Topic Two
+   - Key points discussed
+   - Important details
+
+## 4. DECISIONS MADE
+List all decisions reached during the meeting:
+- Decision 1: [Description]
+- Decision 2: [Description]
+
+## 5. ACTION ITEMS
+Format as a clear list with owners:
+- [ ] Action item description - Owner: [Name] - Due: [Date if mentioned]
+- [ ] Action item description - Owner: [Name] - Due: [Date if mentioned]
+
+## 6. PARTICIPANT CONTRIBUTIONS
+Format speakers as "Name:" followed by their key contributions
+Group related discussion points together
+Remove filler words, stammers, and redundancies
+
+## 7. NEXT STEPS
+Summarize the agreed-upon next steps and follow-up meeting if scheduled
+
+## 8. FORMATTING GUIDELINES
+- Use clear, professional language
+- Remove "um", "uh", "you know" and similar filler words
+- Fix grammar and incomplete sentences
+- Preserve technical terms and specific details
+- Group related discussion points together
+- Use bullet points for clarity
+- NO asterisks, NO underscores, NO markdown formatting
+
+</formatting_rules>
+
+Now format the meeting transcript:"""
+
 # Claude AI formatting functionality
-def format_with_claude_inline(transcript_text):
+def format_with_claude_inline(transcript_text, document_type="world_impact"):
     """Format transcript using Claude AI - inline implementation."""
     api_key = os.environ.get('ANTHROPIC_API_KEY')
     
@@ -96,7 +152,11 @@ def format_with_claude_inline(transcript_text):
     
     client = anthropic.Anthropic(api_key=api_key)
     
-    system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting. Document body will use Times New Roman size 12, while the title will be centered, bold, underlined in Gotham size 20. A branded template with pre-configured header and footers will be used for all documents.
+    # Choose system prompt based on document type
+    if document_type == "meeting":
+        system_prompt = get_meeting_prompt()
+    else:
+        system_prompt = """You are a professional transcript formatter that converts raw AI-generated transcripts into polished, publication-ready documents. Output clean text WITHOUT any asterisks, underscores, or markdown symbols. The Word document exporter will handle all formatting. Document body will use Times New Roman size 12, while the title will be centered, bold, underlined in Gotham size 20. A branded template with pre-configured header and footers will be used for all documents.
 
 <divider_line_rules>
 
@@ -377,7 +437,7 @@ Now format the transcript:"""
         logger.error(f"Unexpected error calling Claude: {type(e).__name__}: {str(e)}")
         raise RuntimeError(f"Claude API error: {str(e)}")
 
-def create_word_document(formatted_text, title, output_path):
+def create_word_document(formatted_text, title, output_path, document_type="world_impact"):
     """Create a professionally formatted Word document using python-docx."""
     try:
         from docx import Document
@@ -386,10 +446,13 @@ def create_word_document(formatted_text, title, output_path):
         import re
         import os
         
-        # ALWAYS use template - it's required for all documents
-        template_path = os.path.join('static', 'template.docx')
+        # Use template only for World Impact documents
+        if document_type == "world_impact":
+            template_path = os.path.join('static', 'template.docx')
+        else:
+            template_path = None  # No template for meeting transcripts
         
-        if os.path.exists(template_path):
+        if template_path and os.path.exists(template_path):
             # Use the template document with pre-configured header and footer
             doc = Document(template_path)
             logger.info("Using required template document with pre-configured branding")
@@ -397,9 +460,12 @@ def create_word_document(formatted_text, title, output_path):
             # New clean template - no cleanup needed
             logger.info("Using clean template with proper header branding")
         else:
-            # Fallback if template is missing
+            # Create plain document for meetings or if template is missing
             doc = Document()
-            logger.warning("TEMPLATE NOT FOUND - template.docx is required in static folder!")
+            if document_type == "world_impact":
+                logger.warning("TEMPLATE NOT FOUND - template.docx is required in static folder!")
+            else:
+                logger.info("Creating plain document for meeting transcript")
         
         # Extract title from the formatted text (first non-divider line)
         text_lines = formatted_text.split('\n')
@@ -489,28 +555,30 @@ def create_word_document(formatted_text, title, output_path):
                         run.font.name = 'Times New Roman'
                         run.font.size = Pt(12)
         
-        # Add the gray footer that appears on every page
-        section = doc.sections[0]
-        footer = section.footer
-        
-        # Clear any existing footer content first
-        for para in footer.paragraphs:
-            para.clear()
-        
-        # Add the standard page footer
-        footer_para = footer.add_paragraph()
-        footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        
-        # Add footer text
-        footer_text = "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
-        footer_run = footer_para.add_run(footer_text)
-        footer_run.font.name = 'Arial'
-        footer_run.font.size = Pt(10)
-        # Set light gray color
-        try:
-            footer_run.font.color.rgb = RGBColor(187, 187, 187)  # Light gray #BBBBBB
-        except:
-            pass  # Fall back to default color if RGBColor fails
+        # Add footer only for World Impact documents
+        if document_type == "world_impact":
+            # Add the gray footer that appears on every page
+            section = doc.sections[0]
+            footer = section.footer
+            
+            # Clear any existing footer content first
+            for para in footer.paragraphs:
+                para.clear()
+            
+            # Add the standard page footer
+            footer_para = footer.add_paragraph()
+            footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            
+            # Add footer text
+            footer_text = "Oral Roberts University Presents: World Impact with Dr. Billy Wilson"
+            footer_run = footer_para.add_run(footer_text)
+            footer_run.font.name = 'Arial'
+            footer_run.font.size = Pt(10)
+            # Set light gray color
+            try:
+                footer_run.font.color.rgb = RGBColor(187, 187, 187)  # Light gray #BBBBBB
+            except:
+                pass  # Fall back to default color if RGBColor fails
         
         # No Creative Commons license - will be added later if needed
         
@@ -601,10 +669,14 @@ def upload_file():
                         response.headers['Content-Type'] = 'application/json'
                         return response, 500
                 
+                # Get document type from request
+                document_type = request.form.get('document_type', 'world_impact')
+                logger.info(f"Document type: {document_type}")
+                
                 # Format the transcript using AI
                 logger.info("Starting AI formatting")
                 try:
-                    formatted_text = format_with_claude_inline(content)
+                    formatted_text = format_with_claude_inline(content, document_type)
                     formatter_used = 'Claude Sonnet 4.5'
                     logger.info("AI formatting completed successfully")
                 except Exception as e:
@@ -619,13 +691,16 @@ def upload_file():
                 
                 # Create output filename
                 base_name = Path(filename).stem
-                output_filename = f"{base_name}_formatted.docx"
+                if document_type == 'meeting':
+                    output_filename = f"{base_name}_meeting_summary.docx"
+                else:
+                    output_filename = f"{base_name}_formatted.docx"
                 output_path = os.path.join(OUTPUT_FOLDER, output_filename)
                 logger.info(f"Creating Word document: {output_path}")
                 
                 # Create Word document
                 title = base_name.replace('_', ' ').replace('-', ' ')
-                create_word_document(formatted_text, title, output_path)
+                create_word_document(formatted_text, title, output_path, document_type)
                 
                 # Clean up uploaded file
                 if upload_path and os.path.exists(upload_path):
