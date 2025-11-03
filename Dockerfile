@@ -15,6 +15,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ /app/backend/
 
+# Copy template file to backend directory (for formatter to find)
+COPY templates/ /app/templates/
+RUN cp /app/templates/sample_formatted.docx /app/backend/sample_formatted.docx 2>/dev/null || \
+    (echo "Template file will be looked up in multiple locations" && true)
+
 # Build frontend
 COPY frontend/ /app/frontend/
 RUN cd /app/frontend && npm install && npm run build

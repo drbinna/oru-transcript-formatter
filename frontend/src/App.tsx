@@ -1,10 +1,21 @@
 import { useState } from 'react'
 import './App.css'
 
+interface JobStatus {
+  job_id: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  created_at?: string
+  started_at?: string
+  completed_at?: string
+  failed_at?: string
+  error?: string
+}
+
 function App() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [progress, setProgress] = useState(0)
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
@@ -24,79 +35,84 @@ function App() {
     }
 
     setLoading(true)
-    setProgress(0)
+    setJobId(null)
+    setJobStatus(null)
     setError(null)
     setSuccess(false)
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 90) return prev
-        return prev + 2
-      })
-    }, 500)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
 
       // Use relative path in production, absolute in development
-      const apiUrl = import.meta.env.PROD 
-        ? '/format' 
-        : 'http://localhost:8000/format'
+      const baseUrl = import.meta.env.PROD 
+        ? '' 
+        : 'http://localhost:8000'
       
-      // Simple retry for transient 502/504/network errors
-      const doRequest = async (): Promise<Response> => {
-        let attempt = 0
-        let lastErr: any
-        while (attempt < 3) {
-          try {
-            const resp = await fetch(apiUrl, { method: 'POST', body: formData })
-            if (resp.status === 502 || resp.status === 504) {
-              throw new Error(`Upstream ${resp.status}`)
-            }
-            return resp
-          } catch (e) {
-            lastErr = e
-            attempt++
-            const delay = 500 * Math.pow(2, attempt - 1)
-            await new Promise((r) => setTimeout(r, delay))
-          }
-        }
-        throw lastErr ?? new Error('Network error')
-      }
-
-      const response = await doRequest()
+      // Step 1: Submit job and get job ID
+      const response = await fetch(`${baseUrl}/format`, {
+        method: 'POST',
+        body: formData
+      })
 
       if (!response.ok) {
-        let details = ''
-        try {
-          details = await response.text()
-        } catch {}
-        throw new Error(`Failed to format transcript (${response.status})${details ? `: ${details.slice(0, 300)}` : ''}`)
+        const errorText = await response.text().catch(() => 'Unknown error')
+        throw new Error(`Failed to start formatting (${response.status}): ${errorText}`)
       }
 
-      setProgress(95)
-      // Download the formatted file
-      const blob = await response.blob()
-      setProgress(100)
-      
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `formatted_${file.name.replace('.txt', '')}.docx`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      const jobData = await response.json()
+      const newJobId = jobData.job_id
+      setJobId(newJobId)
+      setJobStatus({
+        job_id: newJobId,
+        status: jobData.status
+      })
 
-      setSuccess(true)
+      // Step 2: Poll for job status
+      const pollStatus = async (): Promise<void> => {
+        const statusResponse = await fetch(`${baseUrl}/format/${newJobId}/status`)
+        
+        if (!statusResponse.ok) {
+          throw new Error(`Failed to check status: ${statusResponse.status}`)
+        }
+
+        const status: JobStatus = await statusResponse.json()
+        setJobStatus(status)
+
+        if (status.status === 'completed') {
+          // Step 3: Download the file
+          const downloadResponse = await fetch(`${baseUrl}/format/${newJobId}/download`)
+          
+          if (!downloadResponse.ok) {
+            throw new Error(`Failed to download: ${downloadResponse.status}`)
+          }
+
+          const blob = await downloadResponse.blob()
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `formatted_${file.name.replace('.txt', '')}.docx`
+          document.body.appendChild(a)
+          a.click()
+          window.URL.revokeObjectURL(url)
+          document.body.removeChild(a)
+
+          setSuccess(true)
+          setLoading(false)
+        } else if (status.status === 'failed') {
+          throw new Error(status.error || 'Processing failed')
+        } else {
+          // Still processing, poll again in 3 seconds
+          setTimeout(pollStatus, 3000)
+        }
+      }
+
+      // Start polling after 2 seconds
+      setTimeout(pollStatus, 2000)
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      clearInterval(progressInterval)
-      setProgress(100)
-      setTimeout(() => setLoading(false), 1000)
+      setLoading(false)
     }
   }
 
@@ -198,20 +214,43 @@ function App() {
             </div>
           )}
 
-          {/* Progress Bar */}
-          {loading && (
+          {/* Job Status */}
+          {loading && jobStatus && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Formatting transcript...</span>
-                <span className="text-sm font-medium text-blue-600">{progress}%</span>
+                <span className="text-sm font-medium text-gray-700">
+                  {jobStatus.status === 'pending' && '⏳ Job submitted, starting processing...'}
+                  {jobStatus.status === 'processing' && '⚙️ Processing transcript...'}
+                  {jobStatus.status === 'completed' && '✅ Processing complete!'}
+                </span>
+                <span className="text-sm font-medium text-blue-600">
+                  {jobStatus.status === 'pending' && 'Pending'}
+                  {jobStatus.status === 'processing' && 'Processing'}
+                  {jobStatus.status === 'completed' && 'Complete'}
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div 
-                  className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${progress}%` }}
+                  className={`h-3 rounded-full transition-all duration-300 ease-out ${
+                    jobStatus.status === 'pending' ? 'bg-yellow-500 w-1/3' :
+                    jobStatus.status === 'processing' ? 'bg-blue-600 animate-pulse' :
+                    'bg-green-600'
+                  }`}
+                  style={{ 
+                    width: jobStatus.status === 'pending' ? '33%' :
+                           jobStatus.status === 'processing' ? '66%' :
+                           '100%'
+                  }}
                 ></div>
               </div>
-              <p className="text-xs text-gray-500 mt-2">This may take 2-3 minutes. Please don't close this page.</p>
+              <p className="text-xs text-gray-500 mt-2">
+                {jobStatus.status === 'processing' && 'This typically takes 3-4 minutes. The page will auto-refresh...'}
+                {jobStatus.status === 'pending' && 'Initializing...'}
+                {jobStatus.status === 'completed' && 'Download should start automatically!'}
+              </p>
+              {jobId && (
+                <p className="text-xs text-gray-400 mt-1">Job ID: {jobId.slice(0, 8)}...</p>
+              )}
             </div>
           )}
 
