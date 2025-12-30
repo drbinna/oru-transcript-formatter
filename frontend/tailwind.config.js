@@ -5,7 +5,15 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        oru: {
+          navy: '#002F60',
+          gold: '#C5B783',
+          'gold-dark': '#A28E2A',
+        }
+      }
+    },
   },
   plugins: [],
 }

@@ -35,9 +35,9 @@ npm run preview
 
 ## Deployment
 
-The frontend is configured for deployment on Render. The build process will:
+The frontend is built and served by the backend. The build process will:
 1. Build the React application with `npm run build`
-2. Serve static files via the backend API
+2. Serve static files via the FastAPI backend
 
 ## API Integration
 

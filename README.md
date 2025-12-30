@@ -11,6 +11,8 @@ The app:
 
 **No authentication, no file storage** - just upload and get formatted output.
 
+**Live Demo:** [https://pmkdmqvn5v.us-east-2.awsapprunner.com](https://pmkdmqvn5v.us-east-2.awsapprunner.com)
+
 ---
 
 ## 🚀 Features
@@ -52,7 +54,7 @@ transcript-app/
 │   └── requirements.txt   # Python dependencies
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx        # React frontend UI
+│   │   ├── App.tsx        # React frontend UI
 │   │   └── index.css
 │   └── package.json
 ├── templates/

@@ -45,10 +45,10 @@ function App() {
       formData.append('file', file)
 
       // Use relative path in production, absolute in development
-      const baseUrl = import.meta.env.PROD 
-        ? '' 
+      const baseUrl = import.meta.env.PROD
+        ? ''
         : 'http://localhost:8000'
-      
+
       // Step 1: Submit job and get job ID
       const response = await fetch(`${baseUrl}/format`, {
         method: 'POST',
@@ -71,7 +71,7 @@ function App() {
       // Step 2: Poll for job status
       const pollStatus = async (): Promise<void> => {
         const statusResponse = await fetch(`${baseUrl}/format/${newJobId}/status`)
-        
+
         if (!statusResponse.ok) {
           throw new Error(`Failed to check status: ${statusResponse.status}`)
         }
@@ -82,7 +82,7 @@ function App() {
         if (status.status === 'completed') {
           // Step 3: Download the file
           const downloadResponse = await fetch(`${baseUrl}/format/${newJobId}/download`)
-          
+
           if (!downloadResponse.ok) {
             throw new Error(`Failed to download: ${downloadResponse.status}`)
           }
@@ -117,191 +117,200 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: 'url(/oral_roberts.jpeg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Dark overlay for readability */}
+      <div className="min-h-screen" style={{ backgroundColor: 'rgba(0, 47, 96, 0.75)' }}>
         {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            ORU Transcript Formatter
-          </h1>
-          <p className="text-lg text-gray-600">
-            Upload your raw transcript and get a professionally formatted Word document
-          </p>
-        </div>
+        <header className="bg-transparent">
+          <div className="max-w-4xl mx-auto px-6 py-8 text-center">
+            <img
+              src="/oru_logo.png"
+              alt="ORU Logo"
+              className="h-20 mx-auto mb-4"
+            />
+            <h1 className="text-3xl font-bold tracking-tight">
+              <span style={{ color: '#C5B783' }}>ORU</span>
+              <span className="text-white"> Transcript Formatter</span>
+            </h1>
+          </div>
+        </header>
 
-        {/* Upload Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+        {/* Main Content */}
+        <main className="max-w-4xl mx-auto px-6 py-12">
+          <div className="mb-8">
+            <p className="text-white text-lg">
+              Upload a raw transcript file and receive a professionally formatted Word document.
+            </p>
+          </div>
+
+        {/* Upload Section */}
+        <div className="bg-white border border-gray-200 rounded-lg p-8">
+          <div
+            className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors ${
+              file ? 'border-oru-gold bg-amber-50/30' : 'border-gray-300 hover:border-oru-gold'
+            }`}
+          >
             {!file ? (
               <div>
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  stroke="currentColor"
-                  fill="none"
-                  viewBox="0 0 48 48"
-                >
-                  <path
-                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-4h12m-4 4v12m0 0l-4-4m4 4l4-4"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <div className="mt-4">
-                  <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-block transition-colors"
-                  >
-                    Select a transcript file
-                  </label>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    accept=".txt"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <p className="mt-2 text-sm text-gray-500">
-                    Choose a .txt file to format
-                  </p>
+                <div className="w-12 h-12 mx-auto mb-4 text-gray-400">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
                 </div>
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer inline-block px-6 py-2.5 rounded font-medium transition-colors"
+                  style={{ backgroundColor: '#002F60', color: '#FFFFFF' }}
+                >
+                  Select transcript file
+                </label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".txt"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <p className="mt-3 text-sm text-gray-500">
+                  Supports only .txt files
+                </p>
               </div>
             ) : (
               <div>
-                <svg
-                  className="mx-auto h-12 w-12 text-green-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <p className="mt-4 text-lg font-semibold text-gray-900">
-                  {file.name}
-                </p>
-                <p className="mt-2 text-sm text-gray-500">
-                  {(file.size / 1024).toFixed(2)} KB
+                <div className="w-12 h-12 mx-auto mb-4 text-oru-gold-dark">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-lg font-medium text-gray-900">{file.name}</p>
+                <p className="mt-1 text-sm text-gray-500">
+                  {(file.size / 1024).toFixed(1)} KB
                 </p>
                 <button
                   onClick={() => setFile(null)}
-                  className="mt-4 text-sm text-red-600 hover:text-red-700"
+                  className="mt-3 text-sm text-gray-500 hover:text-red-600 transition-colors"
                 >
-                  Remove
+                  Remove file
                 </button>
               </div>
             )}
           </div>
 
-          {/* Action Buttons */}
+          {/* Format Button */}
           {file && (
-            <div className="mt-6 flex gap-4">
+            <div className="mt-6">
               <button
                 onClick={handleUpload}
                 disabled={loading}
-                className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
-                  loading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
+                className="w-full py-3 rounded font-medium transition-all"
+                style={{
+                  backgroundColor: loading ? '#D1D5DB' : '#002F60',
+                  color: loading ? '#6B7280' : '#FFFFFF',
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
               >
-                {loading ? 'Formatting...' : 'Format & Download'}
+                {loading ? 'Processing...' : 'Format Transcript'}
               </button>
             </div>
           )}
 
-          {/* Job Status */}
+          {/* Progress */}
           {loading && jobStatus && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  {jobStatus.status === 'pending' && '⏳ Job submitted, starting processing...'}
-                  {jobStatus.status === 'processing' && '⚙️ Processing transcript...'}
-                  {jobStatus.status === 'completed' && '✅ Processing complete!'}
-                </span>
-                <span className="text-sm font-medium text-blue-600">
-                  {jobStatus.status === 'pending' && 'Pending'}
-                  {jobStatus.status === 'processing' && 'Processing'}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-700">
+                  {jobStatus.status === 'pending' && 'Starting...'}
+                  {jobStatus.status === 'processing' && 'Formatting transcript...'}
                   {jobStatus.status === 'completed' && 'Complete'}
                 </span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">
+                  {jobStatus.status}
+                </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className={`h-3 rounded-full transition-all duration-300 ease-out ${
-                    jobStatus.status === 'pending' ? 'bg-yellow-500 w-1/3' :
-                    jobStatus.status === 'processing' ? 'bg-blue-600 animate-pulse' :
-                    'bg-green-600'
-                  }`}
-                  style={{ 
-                    width: jobStatus.status === 'pending' ? '33%' :
-                           jobStatus.status === 'processing' ? '66%' :
+              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div
+                  className="h-1.5 rounded-full transition-all duration-500 bg-oru-gold-dark"
+                  style={{
+                    width: jobStatus.status === 'pending' ? '25%' :
+                           jobStatus.status === 'processing' ? '60%' :
                            '100%'
                   }}
-                ></div>
+                />
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                {jobStatus.status === 'processing' && 'This typically takes 3-4 minutes. The page will auto-refresh...'}
-                {jobStatus.status === 'pending' && 'Initializing...'}
-                {jobStatus.status === 'completed' && 'Download should start automatically!'}
+              <p className="text-xs text-gray-500 mt-3">
+                {jobStatus.status === 'processing' && 'This typically takes 3-4 minutes'}
+                {jobStatus.status === 'pending' && 'Initializing AI formatter'}
               </p>
-              {jobId && (
-                <p className="text-xs text-gray-400 mt-1">Job ID: {jobId.slice(0, 8)}...</p>
-              )}
             </div>
           )}
 
-          {/* Messages */}
+          {/* Error */}
           {error && (
-            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800">{error}</p>
+            <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-lg">
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
+          {/* Success */}
           {success && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800">
-                ✅ Transcript formatted successfully! Download started.
+            <div className="mt-6 p-4 bg-green-50 border border-green-100 rounded-lg">
+              <p className="text-sm text-green-700">
+                Transcript formatted successfully. Download started.
               </p>
             </div>
           )}
         </div>
 
         {/* Features */}
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: 'rgba(197, 183, 131, 0.2)' }}>
+              <svg className="w-5 h-5" style={{ color: '#C5B783' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
               </svg>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Professional Formatting</h3>
-            <p className="text-sm text-gray-600">Industry-standard transcript layout</p>
+            <h3 className="font-semibold text-white mb-1">Professional Output</h3>
+            <p className="text-sm text-white/80">Formatted to ORU transcript standards</p>
           </div>
 
-          <div className="text-center">
-            <div className="bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: 'rgba(197, 183, 131, 0.2)' }}>
+              <svg className="w-5 h-5" style={{ color: '#C5B783' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
               </svg>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">AI-Powered</h3>
-            <p className="text-sm text-gray-600">Claude AI ensures perfect readability</p>
+            <h3 className="font-semibold text-white mb-1">AI-Powered</h3>
+            <p className="text-sm text-white/80">Claude AI handles intelligent formatting</p>
           </div>
 
-          <div className="text-center">
-            <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m6.364-6.364L19 5m-7-7l2.879 2.879M5 19l2.879-2.879m0 0L5 13.121m2.879 2.879L13.121 19M9.121 9.121l-2.879 2.879" />
+          <div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: 'rgba(197, 183, 131, 0.2)' }}>
+              <svg className="w-5 h-5" style={{ color: '#C5B783' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">ORU Branding</h3>
-            <p className="text-sm text-gray-600">Preserves World Impact branding</p>
+            <h3 className="font-semibold text-white mb-1">Instant Download</h3>
+            <p className="text-sm text-white/80">Get your .docx file immediately</p>
           </div>
         </div>
+      </main>
+
+        {/* Footer */}
+        <footer className="mt-16">
+          <div className="max-w-4xl mx-auto px-6 py-6">
+            <p className="text-sm text-white/70 text-center">
+              Oral Roberts University - World Impact
+            </p>
+          </div>
+        </footer>
       </div>
     </div>
   )
