@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-AWS_REGION="${AWS_REGION:-us-east-1}"
+AWS_REGION="${AWS_REGION:-us-east-2}"
 ECR_REPO="${ECR_REPO:-oru-transcript-formatter}"
 IMAGE_TAG="${1:-latest}"
 
