@@ -2,7 +2,7 @@
 
 A web application that uses **Claude AI** to intelligently format raw transcript text files into professionally styled Word documents.
 
-**Live Demo:** [https://pmkdmqvn5v.us-east-2.awsapprunner.com](https://pmkdmqvn5v.us-east-2.awsapprunner.com)
+**Live Demo:** [https://ewunv4drik.us-east-2.awsapprunner.com](https://ewunv4drik.us-east-2.awsapprunner.com)
 
 ## Features
 
