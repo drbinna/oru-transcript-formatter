@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: oru-transcript-formatter
+    runtime: docker
+    plan: free
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false # Set this in the Render dashboard
+      - key: PORT
+        value: 8000
