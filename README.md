@@ -2,7 +2,7 @@
 
 A web application that uses **Claude AI** to intelligently format raw transcript text files into professionally styled Word documents.
 
-**Live Demo:** [https://ewunv4drik.us-east-2.awsapprunner.com](https://ewunv4drik.us-east-2.awsapprunner.com)
+**Live Demo:** [https://oru-transcript-formatter-x2ye.onrender.com](https://oru-transcript-formatter-x2ye.onrender.com)
 
 ## Features
 
@@ -18,7 +18,7 @@ A web application that uses **Claude AI** to intelligently format raw transcript
 | Frontend | React, TypeScript, TailwindCSS |
 | Backend | FastAPI (Python) |
 | AI | Claude 3.5 Sonnet |
-| Deployment | AWS App Runner |
+| Deployment | Render (Docker) |
 
 ## Project Structure
 
@@ -64,12 +64,13 @@ npm run dev
 
 ## Deployment
 
-Deploy to AWS App Runner:
-```bash
-./deploy-aws.sh
-```
+The application is configured for deployment on **Render** using Docker.
 
-See `AWS_DEPLOY.md` for detailed instructions.
+1. Push your code to GitHub.
+2. Connect your repository to Render as a **Blueprint** instance.
+3. Set your `ANTHROPIC_API_KEY` in the Render environment settings.
+
+See `render.yaml` for configuration and `AWS_DEPLOY.md` for alternative AWS options.
 
 ## License
 
