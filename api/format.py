@@ -10,8 +10,10 @@ import io
 import cgi
 import sys
 
-# Add backend directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+# Add backend directory to Python path so imports work in Vercel's environment
+_backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'backend')
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 
 class handler(BaseHTTPRequestHandler):
@@ -67,9 +69,18 @@ class handler(BaseHTTPRequestHandler):
                 self._send_error(400, 'File is empty')
                 return
 
-            # Import and call the backend formatter
-            from formatter import format_transcript
-            docx_bytes = format_transcript(text_content)
+            # Import the backend formatter (path is set at module level above)
+            try:
+                from formatter import format_transcript
+            except ImportError as e:
+                self._send_error(500, f'Import error: {str(e)}. Path: {sys.path}')
+                return
+
+            try:
+                docx_bytes = format_transcript(text_content)
+            except Exception as e:
+                self._send_error(500, f'Formatting error: {str(e)}')
+                return
 
             # Send the .docx file back as the response
             output_filename = filename.replace('.txt', '_formatted.docx')
