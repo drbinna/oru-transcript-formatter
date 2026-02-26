@@ -2,8 +2,7 @@
 
 A web application that uses **Claude AI** to instantly summarize raw `.txt` transcript files into clean, structured Word documents.
 
-**Live:** [https://oru-transcript-formatter-cvu0-nghnc7qkt.vercel.app](https://oru-transcript-formatter-cvu0-nghnc7qkt.vercel.app)
-
+**Live:** https://oru-transcript-formatter-cvu0.vercel.app/
 ## Features
 
 - **Single API call** — no chunking, no polling, results in ~10 seconds
