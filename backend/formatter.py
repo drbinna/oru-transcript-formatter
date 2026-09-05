@@ -1,11 +1,11 @@
 """
-Fast transcript summarizer using Claude Haiku.
+Fast transcript summarizer using Fireworks AI (OpenAI-compatible API).
 Single API call, no chunking - processes the whole transcript at once.
 """
 
 import os
 import io
-from anthropic import Anthropic
+from openai import OpenAI, AuthenticationError, RateLimitError, APIStatusError, APIConnectionError, APITimeoutError
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
@@ -37,29 +37,52 @@ ACTION ITEMS (if any):
 Keep the summary concise, professional, and easy to read. Remove filler words, repetition, and irrelevant chatter."""
 
 
+FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1"
+DEFAULT_MODEL = "accounts/fireworks/models/llama-v3p3-70b-instruct"
+
+
+class SummarizerError(Exception):
+    """User-facing error with a safe, friendly message."""
+
+
 def format_transcript(text: str, title: str = None) -> bytes:
-    """Summarize a transcript using a single Claude Haiku call. Returns .docx bytes."""
-    api_key = os.getenv('ANTHROPIC_API_KEY')
+    """Summarize a transcript with a single Fireworks call. Returns .docx bytes."""
+    api_key = os.getenv('FIREWORKS_API_KEY')
     if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY not found in environment")
+        raise SummarizerError("The summarizer is not configured (missing API key).")
 
-    client = Anthropic(api_key=api_key, timeout=55, max_retries=1)
+    model = os.getenv('FIREWORKS_MODEL', DEFAULT_MODEL)
+    client = OpenAI(api_key=api_key, base_url=FIREWORKS_BASE_URL, timeout=55, max_retries=1)
 
-    # Truncate very long transcripts to stay within token limits
-    # Claude Haiku can handle ~150k tokens, but keep it reasonable for speed
+    # Truncate very long transcripts to stay within token limits and keep it fast
     max_chars = 80000
     if len(text) > max_chars:
         text = text[:max_chars] + "\n\n[Transcript truncated for processing]"
 
-    response = client.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=2048,
-        temperature=0.2,
-        system=SUMMARIZE_PROMPT,
-        messages=[{"role": "user", "content": f"Please summarize this transcript:\n\n{text}"}]
-    )
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=2048,
+            temperature=0.2,
+            messages=[
+                {"role": "system", "content": SUMMARIZE_PROMPT},
+                {"role": "user", "content": f"Please summarize this transcript:\n\n{text}"},
+            ],
+        )
+    except AuthenticationError:
+        raise SummarizerError("The summarizer is temporarily unavailable (invalid API credentials).")
+    except RateLimitError:
+        raise SummarizerError("The summarizer is busy right now. Please try again in a moment.")
+    except (APIConnectionError, APITimeoutError):
+        raise SummarizerError("Could not reach the summarization service. Please try again.")
+    except APIStatusError as e:
+        if e.status_code in (401, 402, 403, 404):
+            raise SummarizerError("The summarizer is temporarily unavailable. Please try again later.")
+        raise SummarizerError(f"The summarization service returned an error ({e.status_code}).")
 
-    summary_text = response.content[0].text
+    summary_text = (response.choices[0].message.content or "").strip()
+    if not summary_text:
+        raise SummarizerError("The summarizer returned an empty result. Please try again.")
 
     # Build a clean Word document from the summary
     return _build_docx(summary_text)

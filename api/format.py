@@ -71,15 +71,18 @@ class handler(BaseHTTPRequestHandler):
 
             # Import the backend formatter (path is set at module level above)
             try:
-                from formatter import format_transcript
+                from formatter import format_transcript, SummarizerError
             except ImportError as e:
                 self._send_error(500, f'Import error: {str(e)}. Path: {sys.path}')
                 return
 
             try:
                 docx_bytes = format_transcript(text_content)
-            except Exception as e:
-                self._send_error(500, f'Formatting error: {str(e)}')
+            except SummarizerError as e:
+                self._send_error(503, str(e))
+                return
+            except Exception:
+                self._send_error(500, 'Something went wrong while summarizing. Please try again.')
                 return
 
             # Send the .docx file back as the response
@@ -93,7 +96,7 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(docx_bytes)
 
         except Exception as e:
-            self._send_error(500, f'Server error: {str(e)}')
+            self._send_error(500, 'Unexpected server error. Please try again.')
 
     def _send_cors_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')

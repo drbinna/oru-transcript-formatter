@@ -1,6 +1,6 @@
 # Transcript Summarizer
 
-A web application that uses **Claude AI** to instantly summarize raw `.txt` transcript files into clean, structured Word documents.
+A web application that uses **Fireworks AI** (Llama 3.3 70B) to instantly summarize raw `.txt` transcript files into clean, structured Word documents.
 
 **Live:** https://oru-transcript-formatter-cvu0.vercel.app/
 ## Features
@@ -16,7 +16,7 @@ A web application that uses **Claude AI** to instantly summarize raw `.txt` tran
 |-------|------------|
 | Frontend | React, TypeScript, Vite |
 | Backend | Python (Vercel Serverless) |
-| AI | Claude Haiku |
+| AI | Fireworks AI (Llama 3.3 70B Instruct) |
 | Deployment | Vercel |
 
 ## Project Structure
@@ -25,7 +25,7 @@ A web application that uses **Claude AI** to instantly summarize raw `.txt` tran
 ├── api/
 │   └── format.py          # Vercel Python serverless handler
 ├── backend/
-│   ├── formatter.py       # Claude summarization logic
+│   ├── formatter.py       # Fireworks summarization logic
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
@@ -38,12 +38,12 @@ A web application that uses **Claude AI** to instantly summarize raw `.txt` tran
 
 ## Local Development
 
-**Prerequisites:** Python 3.11+, Node.js 18+, Anthropic API key
+**Prerequisites:** Python 3.11+, Node.js 18+, Fireworks API key
 
 **Backend**
 ```bash
 cd backend
-cp .env.example .env      # Add your ANTHROPIC_API_KEY
+cp .env.example .env      # Add your FIREWORKS_API_KEY
 pip install -r requirements.txt
 uvicorn main:app --reload  # Runs on http://localhost:8000
 ```
@@ -59,7 +59,7 @@ npm run dev               # Runs on http://localhost:5173
 
 1. Push your repo to GitHub
 2. Import the project at [vercel.com/new](https://vercel.com/new)
-3. Add environment variable: `ANTHROPIC_API_KEY` = your key
+3. Add environment variable: `FIREWORKS_API_KEY` = your key
 4. Click **Deploy** — Vercel handles everything else
 
 The `vercel.json` configures the build automatically:
