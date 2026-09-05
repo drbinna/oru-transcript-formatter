@@ -1,6 +1,6 @@
 # Transcript Summarizer
 
-A web application that uses **Fireworks AI** (Llama 3.3 70B) to instantly summarize raw `.txt` transcript files into clean, structured Word documents.
+A web application that uses **Fireworks AI** (DeepSeek V4 Flash) to instantly summarize raw `.txt` transcript files into clean, structured Word documents.
 
 **Live:** https://oru-transcript-formatter-cvu0.vercel.app/
 ## Features
@@ -16,7 +16,7 @@ A web application that uses **Fireworks AI** (Llama 3.3 70B) to instantly summar
 |-------|------------|
 | Frontend | React, TypeScript, Vite |
 | Backend | Python (Vercel Serverless) |
-| AI | Fireworks AI (Llama 3.3 70B Instruct) |
+| AI | Fireworks AI (DeepSeek V4 Flash) |
 | Deployment | Vercel |
 
 ## Project Structure

@@ -38,7 +38,7 @@ Keep the summary concise, professional, and easy to read. Remove filler words, r
 
 
 FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1"
-DEFAULT_MODEL = "accounts/fireworks/models/llama-v3p3-70b-instruct"
+DEFAULT_MODEL = "accounts/fireworks/models/deepseek-v4-flash-0731"
 
 
 class SummarizerError(Exception):
@@ -88,6 +88,18 @@ def format_transcript(text: str, title: str = None) -> bytes:
     return _build_docx(summary_text)
 
 
+SECTION_HEADERS = ('OVERVIEW', 'KEY POINTS', 'MAIN DISCUSSION', 'ACTION ITEMS')
+
+
+def _section_name(line: str):
+    """Return the canonical section title if the line is a section header, else None."""
+    upper = line.upper().rstrip(':').strip()
+    for name in SECTION_HEADERS:
+        if upper == name or upper.startswith(name + ' ('):
+            return name.title() if name != 'KEY POINTS' else 'Key Points'
+    return None
+
+
 def _build_docx(summary_text: str) -> bytes:
     """Convert the plain-text summary into a formatted .docx file."""
     doc = Document()
@@ -113,9 +125,9 @@ def _build_docx(summary_text: str) -> bytes:
             run.font.name = 'Calibri'
             p.paragraph_format.space_after = Pt(12)
 
-        elif line in ('OVERVIEW:', 'KEY POINTS:', 'MAIN DISCUSSION:', 'ACTION ITEMS (if any):'):
+        elif _section_name(line):
             p = doc.add_paragraph()
-            run = p.add_run(line.rstrip(':'))
+            run = p.add_run(_section_name(line))
             run.bold = True
             run.font.size = Pt(13)
             run.font.name = 'Calibri'
