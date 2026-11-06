@@ -7,7 +7,7 @@ Upload a raw `.txt` meeting or video transcript and get back a clean, structured
 ## How it works
 
 1. The React frontend posts the `.txt` file to `/api/format`.
-2. A Python serverless function sends the transcript to **Fireworks AI** (DeepSeek V4 Flash by default) with a fixed summarization prompt.
+2. A Python serverless function sends the transcript to **Fireworks AI** (DeepSeek V4.1 Flash by default) with a fixed summarization prompt.
 3. The model's response is parsed into sections and rendered as a `.docx`, which streams straight back to the browser as a download.
 
 One API call, no chunking, no polling. Typical turnaround is 4–8 seconds.
@@ -55,7 +55,7 @@ Every summary follows the same layout:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `FIREWORKS_API_KEY` | Yes | — | Get one at [fireworks.ai](https://fireworks.ai/account/api-keys) |
-| `FIREWORKS_MODEL` | No | `accounts/fireworks/models/deepseek-v4-flash-0731` | Any Fireworks serverless chat model |
+| `FIREWORKS_MODEL` | No | `accounts/fireworks/models/deepseek-v4p1-flash` | Any Fireworks serverless chat model |
 
 To switch models, set `FIREWORKS_MODEL` to another ID from the [Fireworks model library](https://app.fireworks.ai/models?filter=LLM&serverless=true). Models that follow structured instructions well (DeepSeek, GLM, Kimi) work best because the docx builder keys off the section headers.
 
