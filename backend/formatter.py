@@ -5,6 +5,7 @@ Single API call, no chunking - processes the whole transcript at once.
 
 import os
 import io
+import sys
 from openai import OpenAI, AuthenticationError, RateLimitError, APIStatusError, APIConnectionError, APITimeoutError
 from docx import Document
 from docx.shared import Pt
@@ -38,7 +39,7 @@ Keep the summary concise, professional, and easy to read. Remove filler words, r
 
 
 FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1"
-DEFAULT_MODEL = "accounts/fireworks/models/deepseek-v4-flash-0731"
+DEFAULT_MODEL = "accounts/fireworks/models/deepseek-v4p1-flash"
 
 
 class SummarizerError(Exception):
@@ -62,7 +63,7 @@ def format_transcript(text: str, title: str = None) -> bytes:
     try:
         response = client.chat.completions.create(
             model=model,
-            max_tokens=2048,
+            max_tokens=4096,
             temperature=0.2,
             messages=[
                 {"role": "system", "content": SUMMARIZE_PROMPT},
@@ -76,6 +77,8 @@ def format_transcript(text: str, title: str = None) -> bytes:
     except (APIConnectionError, APITimeoutError):
         raise SummarizerError("Could not reach the summarization service. Please try again.")
     except APIStatusError as e:
+        # Keep the real cause in the function logs; users only see the safe message.
+        print(f"Fireworks error {e.status_code} for model {model}: {e.message}", file=sys.stderr)
         if e.status_code in (401, 402, 403, 404):
             raise SummarizerError("The summarizer is temporarily unavailable. Please try again later.")
         raise SummarizerError(f"The summarization service returned an error ({e.status_code}).")
